@@ -84,6 +84,14 @@ app.get("/api/health", asyncHandler(async (_req, res) => {
   res.json({ ok: true });
 }));
 
+app.get("/api/debug/request", (req, res) => {
+  res.json({
+    method: req.method,
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+});
+
 app.get("/api/botellas", asyncHandler(async (_req, res) => {
   const { rows } = await pool.query(
     "SELECT id, nombre, pesovacio, densidad FROM botellas ORDER BY nombre ASC"
