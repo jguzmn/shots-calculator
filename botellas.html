@@ -8,27 +8,54 @@
   <script type="module" src="botellas.js"></script>
 </head>
 <body>
-  <main class="container">
-    <h1>Botellas Registradas</h1>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">BE</span>
+        <span class="brand-name">BarraExacta</span>
+      </a>
 
-    <div id="mensaje" class="message" role="status" hidden></div>
+      <nav class="topnav" aria-label="Navegación principal">
+        <a class="nav-link" href="index.html">Calculadora</a>
+        <a class="nav-link active" href="botellas.html">Botellas</a>
+      </nav>
+    </header>
 
-    <div class="actions">
-      <button id="btnNueva" type="button">Nueva Botella</button>
-      <a href="index.html" class="link-admin">Volver a Calculadora</a>
-    </div>
+    <main class="workspace">
+      <section class="page-header">
+        <div>
+          <p class="eyebrow">Catálogo</p>
+          <h1>Botellas Registradas</h1>
+        </div>
 
-    <table id="tablaBotellas">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Peso vacío (g)</th>
-          <th>Densidad</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </main>
+        <div class="page-actions">
+          <button id="btnNueva" class="button button-primary" type="button">Nueva Botella</button>
+          <a href="index.html" class="button button-secondary">Volver a Calculadora</a>
+        </div>
+      </section>
+
+      <div id="mensaje" class="message" role="status" hidden></div>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Catálogo de botellas</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tablaBotellas">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Peso vacío (g)</th>
+                <th>Densidad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
 </body>
 </html>

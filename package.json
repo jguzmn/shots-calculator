@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "seed": "node scripts/seed-botellas.js"
+    "seed": "node scripts/seed-botellas.js",
+    "import:catalogo-base": "node scripts/import-catalogo-base.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

@@ -8,22 +8,57 @@
   <script type="module" src="botella-form.js"></script>
 </head>
 <body>
-  <main class="container">
-    <h1 id="titulo">Nueva Botella</h1>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">BE</span>
+        <span class="brand-name">BarraExacta</span>
+      </a>
 
-    <div id="mensaje" class="message" role="status" hidden></div>
+      <nav class="topnav" aria-label="Navegación principal">
+        <a class="nav-link" href="index.html">Calculadora</a>
+        <a class="nav-link active" href="botellas.html">Botellas</a>
+      </nav>
+    </header>
 
-    <label for="nombre">Nombre:</label>
-    <input type="text" id="nombre" />
+    <main class="workspace narrow">
+      <section class="page-header">
+        <div>
+          <p class="eyebrow">Catálogo</p>
+          <h1 id="titulo">Nueva Botella</h1>
+        </div>
+      </section>
 
-    <label for="pesoVacio">Peso vacío (g):</label>
-    <input type="number" id="pesoVacio" />
+      <div id="mensaje" class="message" role="status" hidden></div>
 
-    <label for="densidad">Densidad (g/mL):</label>
-    <input type="number" id="densidad" step="0.01" value="1" />
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Datos de botella</h2>
+        </div>
 
-    <button id="btnGuardar" type="button">Guardar</button>
-    <button id="btnCancelar" type="button" class="button-secondary">Cancelar</button>
-  </main>
+        <div class="form-grid">
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" />
+          </div>
+
+          <div class="field">
+            <label for="pesoVacio">Peso vacío (g)</label>
+            <input type="number" id="pesoVacio" />
+          </div>
+
+          <div class="field">
+            <label for="densidad">Densidad (g/mL)</label>
+            <input type="number" id="densidad" step="0.01" value="1" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="btnGuardar" type="button" class="button button-primary">Guardar</button>
+          <button id="btnCancelar" type="button" class="button button-secondary">Cancelar</button>
+        </div>
+      </section>
+    </main>
+  </div>
 </body>
 </html>

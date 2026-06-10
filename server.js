@@ -46,7 +46,7 @@ function validateBotella(input) {
 
   if (!nombre) return { error: "El nombre es obligatorio." };
   if (!Number.isFinite(pesoVacio) || pesoVacio <= 0) {
-    return { error: "El peso vacio debe ser mayor que cero." };
+    return { error: "El peso vacío debe ser mayor que cero." };
   }
   if (!Number.isFinite(densidad) || densidad <= 0) {
     return { error: "La densidad debe ser mayor que cero." };
@@ -183,7 +183,7 @@ app.use((error, _req, res, _next) => {
   }
 
   if (checkViolation) {
-    res.status(400).json({ message: "Los datos de la botella no son validos." });
+    res.status(400).json({ message: "Los datos de la botella no son válidos." });
     return;
   }
 

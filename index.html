@@ -7,30 +7,79 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="container">
-    <h1>Calculadora de Tragos</h1>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">BE</span>
+        <span class="brand-name">BarraExacta</span>
+      </a>
 
-    <div id="mensaje" class="message" role="status" hidden></div>
+      <nav class="topnav" aria-label="Navegación principal">
+        <a class="nav-link active" href="index.html">Calculadora</a>
+        <a class="nav-link" href="botellas.html">Botellas</a>
+      </nav>
+    </header>
 
-    <label for="botella">Tipo de botella:</label>
-    <select id="botella"></select>
+    <main class="workspace">
+      <section class="page-header">
+        <div>
+          <p class="eyebrow">Operación</p>
+          <h1>Calculadora de Tragos</h1>
+        </div>
+        <a href="botellas.html" class="button button-secondary">Administrar botellas</a>
+      </section>
 
-    <label for="pesoActual">Peso actual (g):</label>
-    <input type="number" id="pesoActual" placeholder="Ej. 1250" />
+      <div id="mensaje" class="message" role="status" hidden></div>
 
-    <label for="tamTrago">Tamaño trago (mL):</label>
-    <input type="number" id="tamTrago" value="60" />
+      <section class="calculator-layout">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Datos de medicion</h2>
+          </div>
 
-    <button id="btnCalcular" type="button">Calcular</button>
+          <div class="form-grid">
+            <div class="field">
+              <label for="botella">Tipo de botella</label>
+              <select id="botella"></select>
+            </div>
 
-    <section id="resultado" aria-label="Resultado del calculo">
-      <p><strong>Peso del licor:</strong> <span id="pesoLicor">-</span> g</p>
-      <p><strong>Tragos decimales:</strong> <span id="tragosDecimales">-</span></p>
-      <p><strong>Tragos (fracción):</strong> <span id="tragosFraccion">-</span></p>
-    </section>
+            <div class="field">
+              <label for="pesoActual">Peso actual (g)</label>
+              <input type="number" id="pesoActual" placeholder="Ej. 1250" />
+            </div>
 
-    <a href="botellas.html" class="link-admin">Administrar botellas</a>
-  </main>
+            <div class="field">
+              <label for="tamTrago">Tamaño trago (mL)</label>
+              <input type="number" id="tamTrago" value="60" />
+            </div>
+          </div>
+
+          <button id="btnCalcular" class="button button-primary form-action" type="button">Calcular</button>
+        </div>
+
+        <section id="resultado" class="panel result-panel" aria-label="Resultado del cálculo">
+          <div class="panel-header">
+            <h2>Resultado</h2>
+          </div>
+
+          <div class="metric-row">
+            <span class="metric-label">Peso del licor</span>
+            <strong><span id="pesoLicor">-</span> g</strong>
+          </div>
+
+          <div class="metric-row">
+            <span class="metric-label">Tragos decimales</span>
+            <strong><span id="tragosDecimales">-</span></strong>
+          </div>
+
+          <div class="metric-row">
+            <span class="metric-label">Tragos en fracción</span>
+            <strong><span id="tragosFraccion">-</span></strong>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="script.js"></script>
 </body>

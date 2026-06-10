@@ -14,7 +14,7 @@ async function request(path, options = {}) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.message || "No se pudo completar la operacion.");
+    throw new Error(payload.message || "No se pudo completar la operación.");
   }
 
   return payload;

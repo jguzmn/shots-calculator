@@ -68,17 +68,17 @@ function calcularTragos() {
   }
 
   if (!Number.isFinite(pesoActualValor) || pesoActualValor <= 0) {
-    mostrarMensaje("Ingresa un peso actual valido.");
+    mostrarMensaje("Ingresa un peso actual válido.");
     return;
   }
 
   if (!Number.isFinite(tamTragoValor) || tamTragoValor <= 0) {
-    mostrarMensaje("Ingresa un tamaño de trago valido.");
+    mostrarMensaje("Ingresa un tamaño de trago válido.");
     return;
   }
 
   if (pesoActualValor < pesoVacio) {
-    mostrarMensaje("El peso actual no puede ser menor que el peso vacio.");
+    mostrarMensaje("El peso actual no puede ser menor que el peso vacío.");
     return;
   }
 

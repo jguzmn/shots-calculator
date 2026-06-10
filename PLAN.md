@@ -194,13 +194,26 @@ Decisiones aplicadas:
 - La logica de calculo se separa en un modulo reutilizable.
 - La confirmacion de eliminacion de botellas deja de depender de `confirm()` del navegador.
 
+### Etapa 2 iniciada
+
+Avances aplicados:
+
+- Se agrega una cabecera comun tipo portal.
+- Se define navegacion principal entre Calculadora y Botellas.
+- La calculadora pasa a un layout de paneles con resultados separados.
+- La administracion de botellas pasa a una vista de tabla con mejor jerarquia visual.
+- El formulario de botellas se rediseña con estructura consistente.
+- Se corrigen textos visibles de la interfaz en espanol.
+
 ## Pendientes por Definir
 
 ### Nombre comercial del producto
 
-Estado: pendiente de seleccion.
+Decision:
 
-Opciones sugeridas:
+- El nombre comercial seleccionado es `BarraExacta`.
+
+Opciones consideradas:
 
 - TragoControl
 - BarraExacta
@@ -249,11 +262,12 @@ Decision inicial:
 - Cada cliente tendra su propio catalogo de botellas.
 - Se podra ofrecer un catalogo base como punto de partida.
 - Una vez asignado o importado, el catalogo sera propio del cliente.
+- Se recupera un catalogo base inicial desde el backup anterior de Supabase y se normalizan los nombres antes de importarlo.
 
 Implicacion tecnica futura:
 
 - La tabla `botellas` debera asociarse a `cliente_id`.
-- Podria existir una tabla de plantillas o catalogo base global.
+- Podria existir una tabla de plantillas o catalogo base global, inicialmente `catalogo_botellas_base`.
 - La importacion de catalogo base deberia copiar datos al espacio del cliente, no compartirlos directamente.
 
 ### Historial de mediciones

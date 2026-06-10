@@ -46,6 +46,14 @@ Para importar el contenido de `botellas.json` en Neon:
 npm run seed
 ```
 
+Para importar el catalogo base recuperado del backup de Supabase en una tabla separada:
+
+```bash
+npm run import:catalogo-base
+```
+
+Este comando crea o actualiza `catalogo_botellas_base`. No modifica la tabla operativa `botellas`.
+
 ## Base de datos
 
 Al iniciar, el servidor crea la tabla `botellas` si no existe.
@@ -58,6 +66,8 @@ Campos principales:
 - `densidad`
 - `created_at`
 - `updated_at`
+
+La tabla `catalogo_botellas_base` se reserva para ofrecer un catalogo inicial a futuros clientes.
 
 ## Endpoints
 
