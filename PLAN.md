@@ -204,6 +204,17 @@ Avances aplicados:
 - La administracion de botellas pasa a una vista de tabla con mejor jerarquia visual.
 - El formulario de botellas se rediseña con estructura consistente.
 - Se corrigen textos visibles de la interfaz en espanol.
+- Se selecciona `BarraExacta` como nombre comercial.
+
+### Preparacion de despliegue temporal
+
+Avances aplicados:
+
+- Los archivos estaticos pasan a `public/`.
+- La API Express queda exportable para Vercel.
+- Se agrega una entrada serverless `api/[...path].js` para rutas `/api/*`.
+- Se agrega configuracion inicial `vercel.json`.
+- La variable `DATABASE_URL` debera configurarse como variable de entorno en Vercel.
 
 ## Pendientes por Definir
 

@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check scripts/seed-botellas.js && node --check scripts/import-catalogo-base.js",
     "seed": "node scripts/seed-botellas.js",
     "import:catalogo-base": "node scripts/import-catalogo-base.js"
   },

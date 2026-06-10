@@ -9,6 +9,12 @@ Aplicacion web en espanol para calcular tragos restantes en una botella a partir
 - Neon Postgres
 - HTML, CSS y JavaScript vanilla
 
+## Estructura de despliegue
+
+- `public/`: archivos estaticos que Vercel puede servir desde CDN.
+- `server.js`: aplicacion Express para desarrollo local y API.
+- `api/[...path].js`: entrada serverless para rutas `/api/*` en Vercel.
+
 ## Configuracion local
 
 1. Instalar dependencias:
@@ -36,6 +42,12 @@ npm run dev
 
 ```text
 http://localhost:3000
+```
+
+## Verificacion
+
+```bash
+npm run check
 ```
 
 ## Cargar datos iniciales
@@ -68,6 +80,25 @@ Campos principales:
 - `updated_at`
 
 La tabla `catalogo_botellas_base` se reserva para ofrecer un catalogo inicial a futuros clientes.
+
+## Despliegue temporal en Vercel
+
+1. Subir los cambios a GitHub.
+2. Crear un proyecto nuevo en Vercel importando el repositorio.
+3. Configurar la variable de entorno:
+
+```text
+DATABASE_URL=postgresql://...
+```
+
+4. Desplegar con la configuracion detectada por Vercel.
+
+Notas:
+
+- No se debe subir `.env`.
+- Vercel servira `public/` como archivos estaticos.
+- Las rutas `/api/*` se atienden con la funcion `api/[...path].js`.
+- Para una publicacion temporal, usar la URL preview de Vercel es suficiente.
 
 ## Endpoints
 

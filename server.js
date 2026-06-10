@@ -16,19 +16,10 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-app.use(express.json());
+let schemaReady;
 
-const publicFiles = new Set([
-  "index.html",
-  "style.css",
-  "api-client.js",
-  "calculator.js",
-  "script.js",
-  "botellas.html",
-  "botellas.js",
-  "botella-form.html",
-  "botella-form.js"
-]);
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 function mapBotella(row) {
   return {
@@ -68,11 +59,24 @@ async function ensureSchema() {
   `);
 }
 
+function ensureSchemaOnce() {
+  if (!schemaReady) {
+    schemaReady = ensureSchema();
+  }
+
+  return schemaReady;
+}
+
 function asyncHandler(handler) {
   return (req, res, next) => {
     Promise.resolve(handler(req, res, next)).catch(next);
   };
 }
+
+app.use("/api", asyncHandler(async (_req, _res, next) => {
+  await ensureSchemaOnce();
+  next();
+}));
 
 app.get("/api/health", asyncHandler(async (_req, res) => {
   await pool.query("SELECT 1");
@@ -156,20 +160,7 @@ app.delete("/api/botellas/:id", asyncHandler(async (req, res) => {
   res.status(204).send();
 }));
 
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-app.get("/:file", (req, res, next) => {
-  if (!publicFiles.has(req.params.file)) {
-    next();
-    return;
-  }
-
-  res.sendFile(path.join(__dirname, req.params.file));
-});
-
-app.use((req, res) => {
+app.use("/api", (req, res) => {
   res.status(404).json({ message: "Recurso no encontrado." });
 });
 
@@ -188,16 +179,20 @@ app.use((error, _req, res, _next) => {
   }
 
   console.error(error);
-  res.status(500).json({ message: "Ocurrio un error inesperado." });
+  res.status(500).json({ message: "Ocurrió un error inesperado." });
 });
 
-ensureSchema()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Servidor iniciado en http://localhost:${port}`);
+if (require.main === module) {
+  ensureSchemaOnce()
+    .then(() => {
+      app.listen(port, () => {
+        console.log(`Servidor iniciado en http://localhost:${port}`);
+      });
+    })
+    .catch((error) => {
+      console.error("No se pudo inicializar la base de datos.", error);
+      process.exit(1);
     });
-  })
-  .catch((error) => {
-    console.error("No se pudo inicializar la base de datos.", error);
-    process.exit(1);
-  });
+}
+
+module.exports = app;
