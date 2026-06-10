@@ -1,4 +1,5 @@
 import { actualizarBotella, crearBotella, obtenerBotella } from "./api-client.js";
+import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
@@ -20,11 +21,6 @@ function mostrarMensaje(texto, tipo = "error") {
 function limpiarMensaje() {
   mensaje.textContent = "";
   mensaje.hidden = true;
-}
-
-if (id) {
-  titulo.textContent = "Editar Botella";
-  cargarBotella();
 }
 
 async function cargarBotella() {
@@ -77,3 +73,20 @@ btnGuardar.addEventListener("click", async () => {
 btnCancelar.addEventListener("click", () => {
   window.location.href = "botellas.html";
 });
+
+async function iniciar() {
+  const session = await requerirSesion();
+
+  if (!session) {
+    return;
+  }
+
+  configurarCerrarSesion();
+
+  if (id) {
+    titulo.textContent = "Editar Botella";
+    await cargarBotella();
+  }
+}
+
+iniciar();

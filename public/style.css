@@ -94,6 +94,10 @@ a {
   gap: 4px;
 }
 
+.topbar-action {
+  min-height: 36px;
+}
+
 .nav-link {
   display: inline-flex;
   align-items: center;
@@ -409,6 +413,48 @@ tbody tr:hover {
   background: var(--surface-muted);
 }
 
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: min(100%, 420px);
+  padding: 26px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.login-brand {
+  margin-bottom: 28px;
+}
+
+.login-header {
+  margin-bottom: 18px;
+}
+
+.login-header h1 {
+  font-size: 26px;
+}
+
+.login-form {
+  grid-template-columns: 1fr;
+  padding: 0;
+}
+
+.login-form .field:first-child {
+  grid-column: auto;
+}
+
+.login-action {
+  width: 100%;
+  margin-top: 18px;
+}
+
 @media (max-width: 760px) {
   .topbar,
   .page-header {
@@ -422,6 +468,10 @@ tbody tr:hover {
   }
 
   .topnav {
+    width: 100%;
+  }
+
+  .topbar-action {
     width: 100%;
   }
 

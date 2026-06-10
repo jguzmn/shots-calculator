@@ -28,9 +28,14 @@ npm install
 ```bash
 DATABASE_URL=postgresql://usuario:password@host/neondb?sslmode=require
 PORT=3000
+SESSION_SECRET=cadena-larga-aleatoria
+DEMO_USER_EMAIL=demo@barraexacta.app
+DEMO_USER_PASSWORD=DemoBarraExacta2026!
+DEMO_USER_NAME=Usuario Demo
 ```
 
 La variable `DATABASE_URL` es secreta y no debe subirse al repositorio.
+La variable `SESSION_SECRET` firma la cookie de sesion y tambien debe mantenerse privada.
 
 3. Iniciar el servidor:
 
@@ -58,6 +63,21 @@ Para importar el contenido de `botellas.json` en Neon:
 npm run seed
 ```
 
+Para crear o actualizar el usuario demo:
+
+```bash
+npm run seed:demo-user
+```
+
+Credenciales por defecto del demo:
+
+```text
+Correo: demo@barraexacta.app
+Contraseña: DemoBarraExacta2026!
+```
+
+Estas credenciales pueden cambiarse con `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` y `DEMO_USER_NAME`.
+
 Para importar el catalogo base recuperado del backup de Supabase en una tabla separada:
 
 ```bash
@@ -81,6 +101,17 @@ Campos principales:
 
 La tabla `catalogo_botellas_base` se reserva para ofrecer un catalogo inicial a futuros clientes.
 
+La tabla `usuarios` guarda usuarios basicos para demo:
+
+- `id`
+- `email`
+- `nombre`
+- `rol`
+- `password_hash`
+- `activo`
+- `created_at`
+- `updated_at`
+
 ## Despliegue temporal en Vercel
 
 1. Subir los cambios a GitHub.
@@ -89,9 +120,16 @@ La tabla `catalogo_botellas_base` se reserva para ofrecer un catalogo inicial a 
 
 ```text
 DATABASE_URL=postgresql://...
+SESSION_SECRET=...
 ```
 
-4. Desplegar con la configuracion detectada por Vercel.
+4. Crear el usuario demo localmente contra Neon o desde un entorno con las mismas variables:
+
+```bash
+npm run seed:demo-user
+```
+
+5. Desplegar con la configuracion detectada por Vercel.
 
 Notas:
 

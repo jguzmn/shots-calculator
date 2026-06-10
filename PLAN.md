@@ -216,6 +216,18 @@ Avances aplicados:
 - Se agrega configuracion inicial `vercel.json`.
 - La variable `DATABASE_URL` debera configurarse como variable de entorno en Vercel.
 
+### Login demo
+
+Avances aplicados:
+
+- Se agrega tabla `usuarios` para acceso basico.
+- Se agrega usuario tipo `demo` mediante script.
+- Las contrasenas se guardan con hash PBKDF2.
+- Se agrega cookie de sesion `HttpOnly` firmada con `SESSION_SECRET`.
+- Se agregan endpoints `/api/auth/login`, `/api/auth/logout` y `/api/auth/me`.
+- Las rutas `/api/botellas` requieren sesion.
+- La interfaz agrega pantalla `login.html` y boton de cerrar sesion.
+
 ## Pendientes por Definir
 
 ### Nombre comercial del producto

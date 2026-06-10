@@ -1,4 +1,5 @@
 import { listarBotellas } from "./api-client.js";
+import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 import { calcularTragos as calcularTragosDisponibles } from "./calculator.js";
 
 const botella = document.getElementById("botella");
@@ -96,4 +97,15 @@ function calcularTragos() {
 
 btnCalcular.addEventListener("click", calcularTragos);
 
-cargarBotellas();
+async function iniciar() {
+  const session = await requerirSesion();
+
+  if (!session) {
+    return;
+  }
+
+  configurarCerrarSesion();
+  await cargarBotellas();
+}
+
+iniciar();

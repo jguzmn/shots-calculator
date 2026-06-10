@@ -1,4 +1,5 @@
 import { eliminarBotella, listarBotellas } from "./api-client.js";
+import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 
 const tabla = document.querySelector("#tablaBotellas tbody");
 const btnNueva = document.getElementById("btnNueva");
@@ -120,4 +121,15 @@ function renderAcciones(contenedor, botella) {
   contenedor.append(btnEditar, btnEliminar);
 }
 
-cargarBotellas();
+async function iniciar() {
+  const session = await requerirSesion();
+
+  if (!session) {
+    return;
+  }
+
+  configurarCerrarSesion();
+  await cargarBotellas();
+}
+
+iniciar();
