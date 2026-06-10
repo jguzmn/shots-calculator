@@ -1,61 +1,123 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-const SUPABASE_URL = "https://ergtunwneeemglibqmzc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZ3R1bnduZWVlbWdsaWJxbXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0OTAyMzMsImV4cCI6MjA3NjA2NjIzM30.SKyMi615aaui2XbDaP5KXNGuyJHuRZltdO65-48-un0";
-const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { eliminarBotella, listarBotellas } from "./api-client.js";
 
 const tabla = document.querySelector("#tablaBotellas tbody");
 const btnNueva = document.getElementById("btnNueva");
+const mensaje = document.getElementById("mensaje");
+let botellasActuales = [];
+let botellaPendienteEliminar = null;
+
+function mostrarMensaje(texto, tipo = "error") {
+  mensaje.textContent = texto;
+  mensaje.className = `message message-${tipo}`;
+  mensaje.hidden = false;
+}
+
+function limpiarMensaje() {
+  mensaje.textContent = "";
+  mensaje.hidden = true;
+}
 
 btnNueva.addEventListener("click", () => {
   window.location.href = "botella-form.html";
 });
 
 async function cargarBotellas() {
-  const { data, error } = await client.from("botellas").select("*").order("nombre");
-  if (error) {
-    alert("Error al cargar botellas: " + error.message);
-    return;
+  try {
+    limpiarMensaje();
+    tabla.innerHTML = '<tr><td colspan="4">Cargando botellas...</td></tr>';
+    const data = await listarBotellas();
+    botellasActuales = data;
+    botellaPendienteEliminar = null;
+    renderBotellas(data);
+  } catch (error) {
+    tabla.innerHTML = "";
+    mostrarMensaje(error.message);
   }
-  renderBotellas(data);
 }
 
 function renderBotellas(lista) {
   tabla.innerHTML = "";
-  lista.forEach(b => {
+
+  if (!lista.length) {
+    tabla.innerHTML = '<tr><td colspan="4">No hay botellas registradas.</td></tr>';
+    return;
+  }
+
+  lista.forEach((b) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${b.nombre}</td>
-      <td>${b.pesovacio}</td>
-      <td>${b.densidad}</td>
-      <td style="text-align:center;">
-        <button class="btnEditar" data-id="${b.id}" title="Editar botella">✏️</button>
-        <button class="btnEliminar" data-id="${b.id}" title="Eliminar botella">🗑️</button>
-      </td>
-    `;
+
+    const nombre = document.createElement("td");
+    nombre.textContent = b.nombre;
+
+    const pesoVacio = document.createElement("td");
+    pesoVacio.textContent = b.pesoVacio;
+
+    const densidad = document.createElement("td");
+    densidad.textContent = b.densidad;
+
+    const acciones = document.createElement("td");
+    acciones.className = "table-actions";
+
+    renderAcciones(acciones, b);
+    tr.append(nombre, pesoVacio, densidad, acciones);
     tabla.appendChild(tr);
   });
+}
 
-  document.querySelectorAll(".btnEditar").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.target.dataset.id;
-      window.location.href = `botella-form.html?id=${id}`;
-    });
-  });
+function renderAcciones(contenedor, botella) {
+  contenedor.innerHTML = "";
 
-  document.querySelectorAll(".btnEliminar").forEach(btn => {
-    btn.addEventListener("click", async e => {
-      const id = e.target.dataset.id;
-      if (confirm("¿Seguro que deseas eliminar esta botella?")) {
-        const { error } = await client.from("botellas").delete().eq("id", id);
-        if (error) alert("Error al eliminar: " + error.message);
-        else {
-          alert("Botella eliminada correctamente.");
-          cargarBotellas();
-        }
+  if (botellaPendienteEliminar === botella.id) {
+    const btnConfirmar = document.createElement("button");
+    btnConfirmar.className = "btnConfirmar";
+    btnConfirmar.type = "button";
+    btnConfirmar.textContent = "Confirmar";
+
+    const btnCancelar = document.createElement("button");
+    btnCancelar.className = "btnCancelarInline";
+    btnCancelar.type = "button";
+    btnCancelar.textContent = "Cancelar";
+
+    btnConfirmar.addEventListener("click", async () => {
+      try {
+        await eliminarBotella(botella.id);
+        mostrarMensaje("Botella eliminada correctamente.", "success");
+        await cargarBotellas();
+      } catch (error) {
+        mostrarMensaje(error.message);
       }
     });
+
+    btnCancelar.addEventListener("click", () => {
+      botellaPendienteEliminar = null;
+      renderBotellas(botellasActuales);
+    });
+
+    contenedor.append(btnConfirmar, btnCancelar);
+    return;
+  }
+
+  const btnEditar = document.createElement("button");
+  btnEditar.className = "btnEditar";
+  btnEditar.type = "button";
+  btnEditar.textContent = "Editar";
+
+  const btnEliminar = document.createElement("button");
+  btnEliminar.className = "btnEliminar";
+  btnEliminar.type = "button";
+  btnEliminar.textContent = "Eliminar";
+
+  btnEditar.addEventListener("click", () => {
+    window.location.href = `botella-form.html?id=${botella.id}`;
   });
+
+  btnEliminar.addEventListener("click", () => {
+    botellaPendienteEliminar = botella.id;
+    mostrarMensaje(`Confirma la eliminación de "${botella.nombre}".`, "info");
+    renderBotellas(botellasActuales);
+  });
+
+  contenedor.append(btnEditar, btnEliminar);
 }
 
 cargarBotellas();

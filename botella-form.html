@@ -8,20 +8,22 @@
   <script type="module" src="botella-form.js"></script>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <h1 id="titulo">Nueva Botella</h1>
+
+    <div id="mensaje" class="message" role="status" hidden></div>
 
     <label for="nombre">Nombre:</label>
     <input type="text" id="nombre" />
 
-    <label for="pesovacio">Peso vacío (g):</label>
-    <input type="number" id="pesovacio" />
+    <label for="pesoVacio">Peso vacío (g):</label>
+    <input type="number" id="pesoVacio" />
 
     <label for="densidad">Densidad (g/mL):</label>
     <input type="number" id="densidad" step="0.01" value="1" />
 
-    <button id="btnGuardar">💾 Guardar</button>
-    <button id="btnCancelar" style="background-color:#777;">❌ Cancelar</button>
-  </div>
+    <button id="btnGuardar" type="button">Guardar</button>
+    <button id="btnCancelar" type="button" class="button-secondary">Cancelar</button>
+  </main>
 </body>
 </html>

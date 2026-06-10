@@ -1,0 +1,20 @@
+{
+  "name": "shots-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Calculadora de tragos con API Node.js y base de datos Neon.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed-botellas.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

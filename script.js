@@ -1,62 +1,99 @@
-// === Configuración Supabase ===
-const SUPABASE_URL = "https://ergtunwneeemglibqmzc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZ3R1bnduZWVlbWdsaWJxbXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0OTAyMzMsImV4cCI6MjA3NjA2NjIzM30.SKyMi615aaui2XbDaP5KXNGuyJHuRZltdO65-48-un0";
- const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+import { listarBotellas } from "./api-client.js";
+import { calcularTragos as calcularTragosDisponibles } from "./calculator.js";
 
+const botella = document.getElementById("botella");
+const pesoActual = document.getElementById("pesoActual");
+const tamTrago = document.getElementById("tamTrago");
+const btnCalcular = document.getElementById("btnCalcular");
+const mensaje = document.getElementById("mensaje");
+const pesoLicor = document.getElementById("pesoLicor");
+const tragosDecimales = document.getElementById("tragosDecimales");
+const tragosFraccion = document.getElementById("tragosFraccion");
+
+function mostrarMensaje(texto, tipo = "error") {
+  mensaje.textContent = texto;
+  mensaje.className = `message message-${tipo}`;
+  mensaje.hidden = false;
+}
+
+function limpiarMensaje() {
+  mensaje.textContent = "";
+  mensaje.hidden = true;
+}
 
 async function cargarBotellas() {
-  const { data, error } = await client.from("botellas").select("*").order("nombre", { ascending: true });
-  if (error) {
-    alert("Error al cargar botellas: " + error.message);
+  try {
+    botella.disabled = true;
+    botella.innerHTML = '<option value="">Cargando botellas...</option>';
+
+    const data = await listarBotellas();
+    botella.innerHTML = "";
+
+    if (!data.length) {
+      botella.innerHTML = '<option value="">No hay botellas registradas</option>';
+      mostrarMensaje("Primero registra una botella para poder calcular tragos.", "info");
+      return;
+    }
+
+    data.forEach((b) => {
+      const opt = document.createElement("option");
+      opt.value = b.id;
+      opt.textContent = b.nombre;
+      opt.dataset.pesoVacio = b.pesoVacio;
+      opt.dataset.densidad = b.densidad;
+      botella.appendChild(opt);
+    });
+
+    limpiarMensaje();
+  } catch (error) {
+    botella.innerHTML = '<option value="">Error al cargar</option>';
+    mostrarMensaje(error.message);
+  } finally {
+    botella.disabled = false;
+  }
+}
+
+function calcularTragos() {
+  limpiarMensaje();
+
+  const opcion = botella.selectedOptions[0];
+  const pesoVacio = Number(opcion?.dataset.pesoVacio);
+  const densidad = Number(opcion?.dataset.densidad);
+  const pesoActualValor = Number(pesoActual.value);
+  const tamTragoValor = Number(tamTrago.value);
+
+  if (!opcion?.value) {
+    mostrarMensaje("Selecciona una botella.");
     return;
   }
-  const select = document.getElementById("botella");
-  select.innerHTML = "";
-  data.forEach(b => {
-    const opt = document.createElement("option");
-    opt.value = b.nombre;
-    opt.textContent = b.nombre;
-    opt.dataset.peso = b.pesovacio;
-    opt.dataset.densidad = b.densidad;
-    select.appendChild(opt);
+
+  if (!Number.isFinite(pesoActualValor) || pesoActualValor <= 0) {
+    mostrarMensaje("Ingresa un peso actual valido.");
+    return;
+  }
+
+  if (!Number.isFinite(tamTragoValor) || tamTragoValor <= 0) {
+    mostrarMensaje("Ingresa un tamaño de trago valido.");
+    return;
+  }
+
+  if (pesoActualValor < pesoVacio) {
+    mostrarMensaje("El peso actual no puede ser menor que el peso vacio.");
+    return;
+  }
+
+  const resultado = calcularTragosDisponibles({
+    pesoActual: pesoActualValor,
+    pesoVacio,
+    densidad,
+    tamanoTrago: tamTragoValor
   });
+
+  pesoLicor.textContent = resultado.pesoLicor.toFixed(2);
+  tragosDecimales.textContent = resultado.totalTragos.toFixed(2);
+  tragosFraccion.textContent = resultado.tragosFraccion;
 }
 
-function convertirFraccion(valor) {
-  const entero = Math.floor(valor);
-  const fr = valor - entero;
-  if (fr < 0.13) return `${entero}`;
-  if (fr < 0.38) return `${entero} 1/4`;
-  if (fr < 0.63) return `${entero} 1/2`;
-  if (fr < 0.88) return `${entero} 3/4`;
-  return `${entero + 1}`;
-}
-
-document.getElementById("btnCalcular").addEventListener("click", () => {
-  const sel = document.getElementById("botella");
-  const nombre = sel.value;
-  const pesovacio = parseFloat(sel.selectedOptions[0].dataset.peso);
-  const densidad = parseFloat(sel.selectedOptions[0].dataset.densidad);
-
-  const pesoActual = parseFloat(document.getElementById("pesoActual").value);
-  const tamTrago = parseFloat(document.getElementById("tamTrago").value);
-
-  if (!nombre || !pesoActual || !tamTrago) {
-    alert("Por favor ingresa todos los campos.");
-    return;
-  }
-
-  if (pesoActual < pesovacio) {
-    alert("El peso actual no puede ser menor que el peso vacío.");
-    return;
-  }
-
-  const pesoLicor = pesoActual - pesovacio;
-  const totalTragos = pesoLicor / (densidad * tamTrago);
-
-  document.getElementById("pesoLicor").textContent = pesoLicor.toFixed(2);
-  document.getElementById("tragosDecimales").textContent = totalTragos.toFixed(2);
-  document.getElementById("tragosFraccion").textContent = convertirFraccion(totalTragos);
-});
+btnCalcular.addEventListener("click", calcularTragos);
 
 cargarBotellas();

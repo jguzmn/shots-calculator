@@ -1,57 +1,76 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-const SUPABASE_URL = "https://ergtunwneeemglibqmzc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZ3R1bnduZWVlbWdsaWJxbXpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0OTAyMzMsImV4cCI6MjA3NjA2NjIzM30.SKyMi615aaui2XbDaP5KXNGuyJHuRZltdO65-48-un0";
-const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { actualizarBotella, crearBotella, obtenerBotella } from "./api-client.js";
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
 const titulo = document.getElementById("titulo");
 const nombre = document.getElementById("nombre");
-const pesovacio = document.getElementById("pesovacio");
+const pesoVacio = document.getElementById("pesoVacio");
 const densidad = document.getElementById("densidad");
 const btnGuardar = document.getElementById("btnGuardar");
 const btnCancelar = document.getElementById("btnCancelar");
+const mensaje = document.getElementById("mensaje");
 
-// Si hay id, cargar datos existentes
+function mostrarMensaje(texto, tipo = "error") {
+  mensaje.textContent = texto;
+  mensaje.className = `message message-${tipo}`;
+  mensaje.hidden = false;
+}
+
+function limpiarMensaje() {
+  mensaje.textContent = "";
+  mensaje.hidden = true;
+}
+
 if (id) {
   titulo.textContent = "Editar Botella";
   cargarBotella();
 }
 
 async function cargarBotella() {
-  const { data, error } = await client.from("botellas").select("*").eq("id", id).single();
-  if (error) {
-    alert("Error al cargar botella: " + error.message);
-    return;
+  try {
+    const data = await obtenerBotella(id);
+    nombre.value = data.nombre;
+    pesoVacio.value = data.pesoVacio;
+    densidad.value = data.densidad;
+  } catch (error) {
+    mostrarMensaje(error.message);
   }
-  nombre.value = data.nombre;
-  pesovacio.value = data.pesovacio;
-  densidad.value = data.densidad;
 }
 
 btnGuardar.addEventListener("click", async () => {
+  limpiarMensaje();
+
   const datos = {
     nombre: nombre.value.trim(),
-    pesovacio: parseFloat(pesovacio.value),
-    densidad: parseFloat(densidad.value)
+    pesoVacio: Number(pesoVacio.value),
+    densidad: Number(densidad.value)
   };
 
-  if (!datos.nombre || !datos.pesovacio || !datos.densidad) {
-    alert("Por favor completa todos los campos.");
+  if (!datos.nombre) {
+    mostrarMensaje("El nombre es obligatorio.");
     return;
   }
 
-  let query;
-  if (id) query = client.from("botellas").update(datos).eq("id", id);
-  else query = client.from("botellas").insert([datos]);
+  if (!Number.isFinite(datos.pesoVacio) || datos.pesoVacio <= 0) {
+    mostrarMensaje("El peso vacío debe ser mayor que cero.");
+    return;
+  }
 
-  const { error } = await query;
-  if (error) alert("Error al guardar: " + error.message);
-  else {
-    alert("Botella guardada correctamente.");
+  if (!Number.isFinite(datos.densidad) || datos.densidad <= 0) {
+    mostrarMensaje("La densidad debe ser mayor que cero.");
+    return;
+  }
+
+  try {
+    btnGuardar.disabled = true;
+    if (id) await actualizarBotella(id, datos);
+    else await crearBotella(datos);
     window.location.href = "botellas.html";
+  } catch (error) {
+    mostrarMensaje(error.message);
+  } finally {
+    btnGuardar.disabled = false;
   }
 });
 

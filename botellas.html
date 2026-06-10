@@ -8,12 +8,14 @@
   <script type="module" src="botellas.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>🍾 Botellas Registradas</h1>
+  <main class="container">
+    <h1>Botellas Registradas</h1>
+
+    <div id="mensaje" class="message" role="status" hidden></div>
 
     <div class="actions">
-      <button id="btnNueva">➕ Nueva Botella</button>
-      <a href="index.html" class="link-admin">⬅️ Volver a Calculadora</a>
+      <button id="btnNueva" type="button">Nueva Botella</button>
+      <a href="index.html" class="link-admin">Volver a Calculadora</a>
     </div>
 
     <table id="tablaBotellas">
@@ -27,6 +29,6 @@
       </thead>
       <tbody></tbody>
     </table>
-  </div>
+  </main>
 </body>
 </html>
