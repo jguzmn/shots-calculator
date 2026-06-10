@@ -73,7 +73,8 @@ function asyncHandler(handler) {
   };
 }
 
-app.use("/api", asyncHandler(async (_req, _res, next) => {
+app.use("/api", asyncHandler(async (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
   await ensureSchemaOnce();
   next();
 }));
@@ -122,7 +123,7 @@ app.post("/api/botellas", asyncHandler(async (req, res) => {
   res.status(201).json(mapBotella(rows[0]));
 }));
 
-app.put("/api/botellas/:id", asyncHandler(async (req, res) => {
+async function actualizarBotella(req, res) {
   const validation = validateBotella(req.body);
   if (validation.error) {
     res.status(400).json({ message: validation.error });
@@ -147,9 +148,9 @@ app.put("/api/botellas/:id", asyncHandler(async (req, res) => {
   }
 
   res.json(mapBotella(rows[0]));
-}));
+}
 
-app.delete("/api/botellas/:id", asyncHandler(async (req, res) => {
+async function eliminarBotellaPorId(req, res) {
   const result = await pool.query("DELETE FROM botellas WHERE id = $1", [req.params.id]);
 
   if (!result.rowCount) {
@@ -158,7 +159,12 @@ app.delete("/api/botellas/:id", asyncHandler(async (req, res) => {
   }
 
   res.status(204).send();
-}));
+}
+
+app.put("/api/botellas/:id", asyncHandler(actualizarBotella));
+app.post("/api/botellas/:id/actualizar", asyncHandler(actualizarBotella));
+app.delete("/api/botellas/:id", asyncHandler(eliminarBotellaPorId));
+app.post("/api/botellas/:id/eliminar", asyncHandler(eliminarBotellaPorId));
 
 app.use("/api", (req, res) => {
   res.status(404).json({ message: "Recurso no encontrado." });

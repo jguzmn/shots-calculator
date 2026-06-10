@@ -36,14 +36,14 @@ export function crearBotella(datos) {
 }
 
 export function actualizarBotella(id, datos) {
-  return request(`/api/botellas/${id}`, {
-    method: "PUT",
+  return request(`/api/botellas/${id}/actualizar`, {
+    method: "POST",
     body: JSON.stringify(datos)
   });
 }
 
 export function eliminarBotella(id) {
-  return request(`/api/botellas/${id}`, {
-    method: "DELETE"
+  return request(`/api/botellas/${id}/eliminar`, {
+    method: "POST"
   });
 }
