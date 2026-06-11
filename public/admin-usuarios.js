@@ -2,6 +2,7 @@ import { crearUsuario, listarClientes, listarUsuarios, resetearPasswordUsuario }
 import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 
 const mensaje = document.getElementById("mensaje");
+const adminWorkspace = document.getElementById("adminWorkspace");
 const tabla = document.querySelector("#tablaUsuarios tbody");
 const clienteId = document.getElementById("clienteId");
 const nombre = document.getElementById("nombre");
@@ -113,7 +114,7 @@ async function iniciar() {
   if (!session) return;
 
   if (session.user.rol !== "super_admin") {
-    mostrarMensaje("No tienes permisos para administrar usuarios.");
+    window.location.href = "index.html";
     return;
   }
 
@@ -121,6 +122,7 @@ async function iniciar() {
   document.querySelectorAll(".admin-only").forEach((item) => {
     item.hidden = false;
   });
+  adminWorkspace.hidden = false;
   await cargarDatos();
 }
 

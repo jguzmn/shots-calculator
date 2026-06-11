@@ -2,6 +2,7 @@ import { copiarCatalogoBase, crearCliente, listarClientes } from "./admin-api.js
 import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 
 const mensaje = document.getElementById("mensaje");
+const adminWorkspace = document.getElementById("adminWorkspace");
 const tabla = document.querySelector("#tablaClientes tbody");
 const nombre = document.getElementById("nombre");
 const slug = document.getElementById("slug");
@@ -102,7 +103,7 @@ async function iniciar() {
   if (!session) return;
 
   if (session.user.rol !== "super_admin") {
-    mostrarMensaje("No tienes permisos para administrar clientes.");
+    window.location.href = "index.html";
     return;
   }
 
@@ -110,6 +111,7 @@ async function iniciar() {
   document.querySelectorAll(".admin-only").forEach((item) => {
     item.hidden = false;
   });
+  adminWorkspace.hidden = false;
   await cargarClientes();
 }
 
