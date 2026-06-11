@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Clientes | BarraExacta</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="admin-clientes.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">BE</span>
+        <span class="brand-name">BarraExacta</span>
+      </a>
+
+      <nav class="topnav" aria-label="Navegación principal">
+        <a class="nav-link" href="index.html">Calculadora</a>
+        <a class="nav-link" href="botellas.html">Botellas</a>
+        <a class="nav-link" href="historial.html">Historial</a>
+        <a class="nav-link active admin-only" href="admin-clientes.html" hidden>Clientes</a>
+        <a class="nav-link admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
+      </nav>
+
+      <button id="btnCerrarSesion" class="button button-secondary topbar-action" type="button">Cerrar sesión</button>
+    </header>
+
+    <main class="workspace">
+      <section class="page-header">
+        <div>
+          <p class="eyebrow">Administración</p>
+          <h1>Clientes</h1>
+        </div>
+      </section>
+
+      <div id="mensaje" class="message" role="status" hidden></div>
+
+      <section class="panel admin-form-panel">
+        <div class="panel-header">
+          <h2>Crear cliente</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" />
+          </div>
+          <div class="field">
+            <label for="slug">Slug</label>
+            <input id="slug" type="text" placeholder="cliente-demo" />
+          </div>
+          <div class="field">
+            <label for="tamanoTragoDefault">Tamaño de trago por defecto</label>
+            <input id="tamanoTragoDefault" type="number" value="60" />
+          </div>
+          <div class="field checkbox-field">
+            <label>
+              <input id="copiarCatalogoBase" type="checkbox" checked />
+              Copiar catálogo base
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="btnCrearCliente" type="button" class="button button-primary">Crear cliente</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Clientes registrados</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tablaClientes">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Slug</th>
+                <th>Estado</th>
+                <th>Usuarios</th>
+                <th>Botellas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

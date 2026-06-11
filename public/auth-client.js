@@ -67,3 +67,13 @@ export function configurarCerrarSesion() {
     window.location.href = "login.html";
   });
 }
+
+export function configurarNavegacionAdmin(session) {
+  if (session?.user?.rol !== "super_admin") {
+    return;
+  }
+
+  document.querySelectorAll(".admin-only").forEach((item) => {
+    item.hidden = false;
+  });
+}

@@ -34,6 +34,11 @@ DEMO_USER_PASSWORD=DemoBarraExacta2026!
 DEMO_USER_NAME=Usuario Demo
 DEMO_CLIENT_NAME=Cliente Demo
 DEMO_CLIENT_SLUG=demo
+ADMIN_USER_EMAIL=admin@barraexacta.app
+ADMIN_USER_PASSWORD=AdminBarraExacta2026!
+ADMIN_USER_NAME=Administrador BarraExacta
+ADMIN_CLIENT_NAME=BarraExacta
+ADMIN_CLIENT_SLUG=barraexacta
 ```
 
 La variable `DATABASE_URL` es secreta y no debe subirse al repositorio.
@@ -71,6 +76,12 @@ Para crear o actualizar el usuario demo:
 npm run seed:demo-user
 ```
 
+Para crear o actualizar el usuario super admin:
+
+```bash
+npm run seed:admin-user
+```
+
 Credenciales por defecto del demo:
 
 ```text
@@ -79,6 +90,8 @@ Contraseña: DemoBarraExacta2026!
 ```
 
 Estas credenciales pueden cambiarse con `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` y `DEMO_USER_NAME`.
+
+Las credenciales del super admin pueden cambiarse con `ADMIN_USER_EMAIL`, `ADMIN_USER_PASSWORD` y `ADMIN_USER_NAME`.
 
 Para importar el catalogo base recuperado del backup de Supabase en una tabla separada:
 
@@ -115,6 +128,13 @@ La tabla `usuarios` guarda usuarios basicos para demo:
 - `created_at`
 - `updated_at`
 
+Roles iniciales:
+
+- `super_admin`: administra clientes y usuarios.
+- `admin_cliente`: reservado para administracion futura por cliente.
+- `usuario_cliente`: usuario operativo.
+- `demo`: usuario de demostracion.
+
 La tabla `clientes` prepara el producto para pilotos por cliente:
 
 - `id`
@@ -143,6 +163,8 @@ El alcance tecnico actual del piloto incluye:
 
 - Login privado.
 - Usuario demo asociado a un cliente demo.
+- Usuario super admin para administrar pilotos.
+- Pantallas admin para clientes y usuarios.
 - Botellas filtradas por cliente.
 - Calculadora de tragos.
 - Registro automatico de mediciones al calcular.
@@ -190,6 +212,14 @@ Notas:
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
+- `GET /api/admin/clientes`
+- `POST /api/admin/clientes`
+- `PUT /api/admin/clientes/:id`
+- `POST /api/admin/clientes/:id/copiar-catalogo-base`
+- `GET /api/admin/usuarios`
+- `POST /api/admin/usuarios`
+- `PUT /api/admin/usuarios/:id`
+- `POST /api/admin/usuarios/:id/reset-password`
 
 ## Nota de seguridad
 

@@ -1,5 +1,5 @@
 import { listarMediciones } from "./api-client.js";
-import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
+import { configurarCerrarSesion, configurarNavegacionAdmin, requerirSesion } from "./auth-client.js";
 
 const tabla = document.querySelector("#tablaMediciones tbody");
 const mensaje = document.getElementById("mensaje");
@@ -65,6 +65,7 @@ async function iniciar() {
   }
 
   configurarCerrarSesion();
+  configurarNavegacionAdmin(session);
   await cargarMediciones();
 }
 

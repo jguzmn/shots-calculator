@@ -243,11 +243,27 @@ Avances aplicados:
 
 Pendientes posteriores:
 
-- Panel para crear clientes desde la interfaz.
-- Copiar catalogo base a un cliente desde la interfaz.
-- Roles diferenciados entre admin de cliente y usuario operativo.
+- Panel mas completo para editar clientes desde la interfaz.
+- Panel mas completo para editar usuarios desde la interfaz.
+- Roles diferenciados con permisos reales entre admin de cliente y usuario operativo.
 - Filtros de historial por fecha y botella.
 - Configuracion visual por cliente.
+
+### Modo admin inicial
+
+Avances aplicados:
+
+- Se agrega rol `super_admin`.
+- Se agrega script `seed:admin-user`.
+- Se agregan endpoints `/api/admin/clientes`.
+- Se agregan endpoints `/api/admin/usuarios`.
+- Se agrega pantalla `admin-clientes.html`.
+- Se agrega pantalla `admin-usuarios.html`.
+- El super admin puede crear clientes.
+- El super admin puede copiar el catalogo base a un cliente.
+- El super admin puede crear usuarios por cliente.
+- El super admin puede resetear contrasenas de usuarios.
+- La navegacion admin solo se muestra a usuarios `super_admin`.
 
 ## Pendientes por Definir
 

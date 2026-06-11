@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Usuarios | BarraExacta</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="admin-usuarios.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">BE</span>
+        <span class="brand-name">BarraExacta</span>
+      </a>
+
+      <nav class="topnav" aria-label="Navegación principal">
+        <a class="nav-link" href="index.html">Calculadora</a>
+        <a class="nav-link" href="botellas.html">Botellas</a>
+        <a class="nav-link" href="historial.html">Historial</a>
+        <a class="nav-link admin-only" href="admin-clientes.html" hidden>Clientes</a>
+        <a class="nav-link active admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
+      </nav>
+
+      <button id="btnCerrarSesion" class="button button-secondary topbar-action" type="button">Cerrar sesión</button>
+    </header>
+
+    <main class="workspace">
+      <section class="page-header">
+        <div>
+          <p class="eyebrow">Administración</p>
+          <h1>Usuarios</h1>
+        </div>
+      </section>
+
+      <div id="mensaje" class="message" role="status" hidden></div>
+
+      <section class="panel admin-form-panel">
+        <div class="panel-header">
+          <h2>Crear usuario</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="clienteId">Cliente</label>
+            <select id="clienteId"></select>
+          </div>
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" />
+          </div>
+          <div class="field">
+            <label for="email">Correo</label>
+            <input id="email" type="email" />
+          </div>
+          <div class="field">
+            <label for="rol">Rol</label>
+            <select id="rol">
+              <option value="admin_cliente">Admin cliente</option>
+              <option value="usuario_cliente">Usuario cliente</option>
+              <option value="demo">Demo</option>
+              <option value="super_admin">Super admin</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="password">Contraseña inicial</label>
+            <input id="password" type="password" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="btnCrearUsuario" type="button" class="button button-primary">Crear usuario</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Usuarios registrados</h2>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tablaUsuarios">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Cliente</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

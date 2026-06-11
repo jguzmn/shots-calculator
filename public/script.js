@@ -1,5 +1,5 @@
 import { listarBotellas, registrarMedicion } from "./api-client.js";
-import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
+import { configurarCerrarSesion, configurarNavegacionAdmin, requerirSesion } from "./auth-client.js";
 import { calcularTragos as calcularTragosDisponibles } from "./calculator.js";
 
 const botella = document.getElementById("botella");
@@ -119,6 +119,7 @@ async function iniciar() {
   }
 
   configurarCerrarSesion();
+  configurarNavegacionAdmin(session);
   await cargarBotellas();
 }
 

@@ -1,7 +1,7 @@
 const path = require("node:path");
 const express = require("express");
 const { Pool } = require("pg");
-const { signSession, verifyPassword, verifySession } = require("./lib/auth-utils");
+const { hashPassword, signSession, verifyPassword, verifySession } = require("./lib/auth-utils");
 require("dotenv").config();
 
 const app = express();
@@ -54,6 +54,30 @@ function mapMedicion(row) {
     tragosDecimales: Number(row.tragos_decimales),
     tragosFraccion: row.tragos_fraccion,
     creadaEn: row.created_at
+  };
+}
+
+function mapCliente(row) {
+  return {
+    id: row.id,
+    nombre: row.nombre,
+    slug: row.slug,
+    activo: row.activo,
+    tamanoTragoDefault: Number(row.tamano_trago_default),
+    totalUsuarios: Number(row.total_usuarios || 0),
+    totalBotellas: Number(row.total_botellas || 0)
+  };
+}
+
+function mapUsuario(row) {
+  return {
+    id: row.id,
+    clienteId: row.cliente_id,
+    clienteNombre: row.cliente_nombre,
+    email: row.email,
+    nombre: row.nombre,
+    rol: row.rol,
+    activo: row.activo
   };
 }
 
@@ -192,6 +216,16 @@ async function ensureSchema() {
 
     CREATE INDEX IF NOT EXISTS mediciones_cliente_created_at_idx
       ON mediciones (cliente_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS catalogo_botellas_base (
+      id BIGSERIAL PRIMARY KEY,
+      nombre TEXT NOT NULL UNIQUE,
+      pesovacio NUMERIC(10, 2) NOT NULL CHECK (pesovacio > 0),
+      densidad NUMERIC(8, 4) NOT NULL CHECK (densidad > 0),
+      activo BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
   `);
 }
 
@@ -276,6 +310,58 @@ function requireAuth(req, res, next) {
 
   req.user = session;
   next();
+}
+
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.rol)) {
+      res.status(403).json({ message: "No tienes permisos para esta acción." });
+      return;
+    }
+
+    next();
+  };
+}
+
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+async function copiarCatalogoBaseACliente(clienteId) {
+  const { rows } = await pool.query(
+    "SELECT nombre, pesovacio, densidad FROM catalogo_botellas_base WHERE activo = true ORDER BY nombre ASC"
+  );
+
+  for (const botella of rows) {
+    const existing = await pool.query(
+      "SELECT id FROM botellas WHERE cliente_id = $1 AND lower(nombre) = lower($2)",
+      [clienteId, botella.nombre]
+    );
+
+    if (existing.rows.length) {
+      await pool.query(
+        `UPDATE botellas
+         SET pesovacio = $1,
+             densidad = $2,
+             activo = true,
+             updated_at = now()
+         WHERE id = $3`,
+        [botella.pesovacio, botella.densidad, existing.rows[0].id]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO botellas (cliente_id, nombre, pesovacio, densidad)
+         VALUES ($1, $2, $3, $4)`,
+        [clienteId, botella.nombre, botella.pesovacio, botella.densidad]
+      );
+    }
+  }
 }
 
 app.use("/api", asyncHandler(async (_req, res, next) => {
@@ -363,6 +449,215 @@ app.post("/api/auth/logout", (req, res) => {
   clearSessionCookie(res);
   res.status(204).send();
 });
+
+app.use("/api/admin", requireAuth, requireRole("super_admin"));
+
+app.get("/api/admin/clientes", asyncHandler(async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT c.id,
+            c.nombre,
+            c.slug,
+            c.activo,
+            c.tamano_trago_default,
+            COUNT(DISTINCT u.id) AS total_usuarios,
+            COUNT(DISTINCT b.id) AS total_botellas
+     FROM clientes c
+     LEFT JOIN usuarios u ON u.cliente_id = c.id
+     LEFT JOIN botellas b ON b.cliente_id = c.id
+     GROUP BY c.id
+     ORDER BY c.nombre ASC`
+  );
+
+  res.json(rows.map(mapCliente));
+}));
+
+app.post("/api/admin/clientes", asyncHandler(async (req, res) => {
+  const nombre = String(req.body.nombre || "").trim();
+  const slug = slugify(req.body.slug || nombre);
+  const tamanoTragoDefault = Number(req.body.tamanoTragoDefault || 60);
+  const copiarCatalogoBase = Boolean(req.body.copiarCatalogoBase);
+
+  if (!nombre) {
+    res.status(400).json({ message: "El nombre del cliente es obligatorio." });
+    return;
+  }
+
+  if (!slug) {
+    res.status(400).json({ message: "El slug del cliente no es válido." });
+    return;
+  }
+
+  if (!Number.isFinite(tamanoTragoDefault) || tamanoTragoDefault <= 0) {
+    res.status(400).json({ message: "El tamaño de trago por defecto no es válido." });
+    return;
+  }
+
+  const { rows } = await pool.query(
+    `INSERT INTO clientes (nombre, slug, tamano_trago_default)
+     VALUES ($1, $2, $3)
+     RETURNING id, nombre, slug, activo, tamano_trago_default, 0 AS total_usuarios, 0 AS total_botellas`,
+    [nombre, slug, tamanoTragoDefault]
+  );
+
+  if (copiarCatalogoBase) {
+    await copiarCatalogoBaseACliente(rows[0].id);
+  }
+
+  res.status(201).json(mapCliente(rows[0]));
+}));
+
+app.put("/api/admin/clientes/:id", asyncHandler(async (req, res) => {
+  const nombre = String(req.body.nombre || "").trim();
+  const slug = slugify(req.body.slug || nombre);
+  const activo = Boolean(req.body.activo);
+  const tamanoTragoDefault = Number(req.body.tamanoTragoDefault || 60);
+
+  if (!nombre || !slug) {
+    res.status(400).json({ message: "Nombre y slug son obligatorios." });
+    return;
+  }
+
+  const { rows } = await pool.query(
+    `UPDATE clientes
+     SET nombre = $1,
+         slug = $2,
+         activo = $3,
+         tamano_trago_default = $4,
+         updated_at = now()
+     WHERE id = $5
+     RETURNING id, nombre, slug, activo, tamano_trago_default, 0 AS total_usuarios, 0 AS total_botellas`,
+    [nombre, slug, activo, tamanoTragoDefault, req.params.id]
+  );
+
+  if (!rows.length) {
+    res.status(404).json({ message: "Cliente no encontrado." });
+    return;
+  }
+
+  res.json(mapCliente(rows[0]));
+}));
+
+app.post("/api/admin/clientes/:id/copiar-catalogo-base", asyncHandler(async (req, res) => {
+  await copiarCatalogoBaseACliente(req.params.id);
+  res.status(204).send();
+}));
+
+app.get("/api/admin/usuarios", asyncHandler(async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT u.id,
+            u.cliente_id,
+            c.nombre AS cliente_nombre,
+            u.email,
+            u.nombre,
+            u.rol,
+            u.activo
+     FROM usuarios u
+     JOIN clientes c ON c.id = u.cliente_id
+     ORDER BY c.nombre ASC, u.nombre ASC`
+  );
+
+  res.json(rows.map(mapUsuario));
+}));
+
+app.post("/api/admin/usuarios", asyncHandler(async (req, res) => {
+  const clienteId = Number(req.body.clienteId);
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const nombre = String(req.body.nombre || "").trim();
+  const rol = String(req.body.rol || "usuario_cliente").trim();
+  const password = String(req.body.password || "");
+
+  if (!Number.isInteger(clienteId) || clienteId <= 0) {
+    res.status(400).json({ message: "Selecciona un cliente válido." });
+    return;
+  }
+
+  if (!email || !nombre || !password) {
+    res.status(400).json({ message: "Correo, nombre y contraseña son obligatorios." });
+    return;
+  }
+
+  if (!["super_admin", "admin_cliente", "usuario_cliente", "demo"].includes(rol)) {
+    res.status(400).json({ message: "Rol inválido." });
+    return;
+  }
+
+  const { rows } = await pool.query(
+    `INSERT INTO usuarios (cliente_id, email, nombre, rol, password_hash, activo)
+     VALUES ($1, $2, $3, $4, $5, true)
+     RETURNING id, cliente_id, email, nombre, rol, activo`,
+    [clienteId, email, nombre, rol, hashPassword(password)]
+  );
+
+  const client = await pool.query("SELECT nombre FROM clientes WHERE id = $1", [clienteId]);
+  rows[0].cliente_nombre = client.rows[0]?.nombre || "";
+
+  res.status(201).json(mapUsuario(rows[0]));
+}));
+
+app.put("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
+  const clienteId = Number(req.body.clienteId);
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const nombre = String(req.body.nombre || "").trim();
+  const rol = String(req.body.rol || "usuario_cliente").trim();
+  const activo = Boolean(req.body.activo);
+
+  if (!Number.isInteger(clienteId) || clienteId <= 0 || !email || !nombre) {
+    res.status(400).json({ message: "Cliente, correo y nombre son obligatorios." });
+    return;
+  }
+
+  if (!["super_admin", "admin_cliente", "usuario_cliente", "demo"].includes(rol)) {
+    res.status(400).json({ message: "Rol inválido." });
+    return;
+  }
+
+  const { rows } = await pool.query(
+    `UPDATE usuarios
+     SET cliente_id = $1,
+         email = $2,
+         nombre = $3,
+         rol = $4,
+         activo = $5,
+         updated_at = now()
+     WHERE id = $6
+     RETURNING id, cliente_id, email, nombre, rol, activo`,
+    [clienteId, email, nombre, rol, activo, req.params.id]
+  );
+
+  if (!rows.length) {
+    res.status(404).json({ message: "Usuario no encontrado." });
+    return;
+  }
+
+  const client = await pool.query("SELECT nombre FROM clientes WHERE id = $1", [clienteId]);
+  rows[0].cliente_nombre = client.rows[0]?.nombre || "";
+
+  res.json(mapUsuario(rows[0]));
+}));
+
+app.post("/api/admin/usuarios/:id/reset-password", asyncHandler(async (req, res) => {
+  const password = String(req.body.password || "");
+
+  if (!password || password.length < 8) {
+    res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
+    return;
+  }
+
+  const result = await pool.query(
+    `UPDATE usuarios
+     SET password_hash = $1,
+         updated_at = now()
+     WHERE id = $2`,
+    [hashPassword(password), req.params.id]
+  );
+
+  if (!result.rowCount) {
+    res.status(404).json({ message: "Usuario no encontrado." });
+    return;
+  }
+
+  res.status(204).send();
+}));
 
 app.use("/api/botellas", requireAuth);
 app.use("/api/mediciones", requireAuth);
@@ -619,14 +914,32 @@ app.use("/api", (req, res) => {
 app.use((error, _req, res, _next) => {
   const duplicateName = error.code === "23505";
   const checkViolation = error.code === "23514";
+  const foreignKeyViolation = error.code === "23503";
 
   if (duplicateName) {
-    res.status(409).json({ message: "Ya existe una botella con ese nombre." });
+    const constraint = String(error.constraint || "");
+
+    if (constraint.includes("usuarios_email")) {
+      res.status(409).json({ message: "Ya existe un usuario con ese correo." });
+      return;
+    }
+
+    if (constraint.includes("clientes_slug")) {
+      res.status(409).json({ message: "Ya existe un cliente con ese slug." });
+      return;
+    }
+
+    res.status(409).json({ message: "Ya existe un registro con esos datos." });
     return;
   }
 
   if (checkViolation) {
-    res.status(400).json({ message: "Los datos de la botella no son válidos." });
+    res.status(400).json({ message: "Los datos ingresados no son válidos." });
+    return;
+  }
+
+  if (foreignKeyViolation) {
+    res.status(400).json({ message: "El registro relacionado no existe." });
     return;
   }
 

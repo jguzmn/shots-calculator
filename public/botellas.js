@@ -1,5 +1,5 @@
 import { eliminarBotella, listarBotellas } from "./api-client.js";
-import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
+import { configurarCerrarSesion, configurarNavegacionAdmin, requerirSesion } from "./auth-client.js";
 
 const tabla = document.querySelector("#tablaBotellas tbody");
 const btnNueva = document.getElementById("btnNueva");
@@ -129,6 +129,7 @@ async function iniciar() {
   }
 
   configurarCerrarSesion();
+  configurarNavegacionAdmin(session);
   await cargarBotellas();
 }
 
