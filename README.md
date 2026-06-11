@@ -219,7 +219,10 @@ Notas:
 - `GET /api/admin/usuarios`
 - `POST /api/admin/usuarios`
 - `PUT /api/admin/usuarios/:id`
+- `DELETE /api/admin/usuarios/:id`
 - `POST /api/admin/usuarios/:id/reset-password`
+
+La eliminacion de usuarios es fisica cuando no tienen mediciones asociadas. Si ya tienen historial, el endpoint los deja inactivos para conservar trazabilidad.
 
 ## Nota de seguridad
 

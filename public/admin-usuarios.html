@@ -38,7 +38,7 @@
 
       <section class="panel admin-form-panel">
         <div class="panel-header">
-          <h2>Crear usuario</h2>
+          <h2 id="tituloFormularioUsuario">Crear usuario</h2>
         </div>
 
         <div class="form-grid">
@@ -67,9 +67,16 @@
             <label for="password">Contraseña inicial</label>
             <input id="password" type="password" />
           </div>
+          <div class="field checkbox-field">
+            <label>
+              <input id="activo" type="checkbox" checked />
+              Usuario activo
+            </label>
+          </div>
         </div>
 
         <div class="form-actions">
+          <button id="btnCancelarEdicion" type="button" class="button button-secondary" hidden>Cancelar</button>
           <button id="btnCrearUsuario" type="button" class="button button-primary">Crear usuario</button>
         </div>
       </section>

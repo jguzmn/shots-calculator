@@ -262,6 +262,9 @@ Avances aplicados:
 - El super admin puede crear clientes.
 - El super admin puede copiar el catalogo base a un cliente.
 - El super admin puede crear usuarios por cliente.
+- El super admin puede editar usuarios.
+- El super admin puede activar, inactivar y eliminar usuarios.
+- La eliminacion de usuarios es fisica si no hay historial; si hay mediciones, se maneja como baja logica para conservar trazabilidad.
 - El super admin puede resetear contrasenas de usuarios.
 - La navegacion admin solo se muestra a usuarios `super_admin`.
 

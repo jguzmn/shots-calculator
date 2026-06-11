@@ -1,15 +1,27 @@
-import { crearUsuario, listarClientes, listarUsuarios, resetearPasswordUsuario } from "./admin-api.js";
+import {
+  actualizarUsuario,
+  crearUsuario,
+  eliminarUsuario,
+  listarClientes,
+  listarUsuarios,
+  resetearPasswordUsuario
+} from "./admin-api.js";
 import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 
 const mensaje = document.getElementById("mensaje");
 const adminWorkspace = document.getElementById("adminWorkspace");
 const tabla = document.querySelector("#tablaUsuarios tbody");
+const tituloFormularioUsuario = document.getElementById("tituloFormularioUsuario");
 const clienteId = document.getElementById("clienteId");
 const nombre = document.getElementById("nombre");
 const email = document.getElementById("email");
 const rol = document.getElementById("rol");
 const password = document.getElementById("password");
+const activo = document.getElementById("activo");
 const btnCrearUsuario = document.getElementById("btnCrearUsuario");
+const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
+
+let usuarioEditandoId = null;
 
 function mostrarMensaje(texto, tipo = "error") {
   mensaje.textContent = texto;
@@ -39,6 +51,48 @@ function agregarCelda(fila, texto) {
   return td;
 }
 
+function limpiarFormulario() {
+  usuarioEditandoId = null;
+  tituloFormularioUsuario.textContent = "Crear usuario";
+  btnCrearUsuario.textContent = "Crear usuario";
+  btnCancelarEdicion.hidden = true;
+  clienteId.selectedIndex = 0;
+  nombre.value = "";
+  email.value = "";
+  rol.value = "admin_cliente";
+  password.value = "";
+  password.disabled = false;
+  password.placeholder = "";
+  activo.checked = true;
+}
+
+function cargarUsuarioEnFormulario(usuario) {
+  usuarioEditandoId = usuario.id;
+  tituloFormularioUsuario.textContent = "Editar usuario";
+  btnCrearUsuario.textContent = "Guardar cambios";
+  btnCancelarEdicion.hidden = false;
+  clienteId.value = usuario.clienteId;
+  nombre.value = usuario.nombre;
+  email.value = usuario.email;
+  rol.value = usuario.rol;
+  password.value = "";
+  password.disabled = true;
+  password.placeholder = "Usa Reset password para cambiarla";
+  activo.checked = usuario.activo;
+  limpiarMensaje();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function datosUsuarioDesdeFormulario() {
+  return {
+    clienteId: Number(clienteId.value),
+    nombre: nombre.value,
+    email: email.value,
+    rol: rol.value,
+    activo: activo.checked
+  };
+}
+
 function renderUsuarios(usuarios) {
   tabla.innerHTML = "";
 
@@ -57,6 +111,41 @@ function renderUsuarios(usuarios) {
 
     const acciones = agregarCelda(tr, "");
     acciones.className = "table-actions";
+
+    const btnEditar = document.createElement("button");
+    btnEditar.type = "button";
+    btnEditar.className = "btnEditar button button-secondary";
+    btnEditar.textContent = "Editar";
+    btnEditar.addEventListener("click", () => cargarUsuarioEnFormulario(usuario));
+    acciones.append(btnEditar);
+
+    const btnEstado = document.createElement("button");
+    btnEstado.type = "button";
+    btnEstado.className = usuario.activo ? "btnEliminar" : "btnCancelarInline";
+    btnEstado.textContent = usuario.activo ? "Inactivar" : "Activar";
+    btnEstado.addEventListener("click", async () => {
+      try {
+        await actualizarUsuario(usuario.id, {
+          clienteId: usuario.clienteId,
+          nombre: usuario.nombre,
+          email: usuario.email,
+          rol: usuario.rol,
+          activo: !usuario.activo
+        });
+        mostrarMensaje(
+          usuario.activo ? "Usuario inactivado correctamente." : "Usuario activado correctamente.",
+          "success"
+        );
+        if (usuarioEditandoId === usuario.id) {
+          limpiarFormulario();
+        }
+        await cargarDatos();
+      } catch (error) {
+        mostrarMensaje(error.message);
+      }
+    });
+    acciones.append(btnEstado);
+
     const btnReset = document.createElement("button");
     btnReset.type = "button";
     btnReset.className = "button button-secondary";
@@ -74,6 +163,36 @@ function renderUsuarios(usuarios) {
       }
     });
     acciones.append(btnReset);
+
+    const btnEliminar = document.createElement("button");
+    btnEliminar.type = "button";
+    btnEliminar.className = "btnEliminar";
+    btnEliminar.textContent = "Eliminar";
+    btnEliminar.addEventListener("click", async () => {
+      const confirmado = window.confirm(
+        `Eliminar usuario ${usuario.email}? Si tiene historial, quedara inactivo y no podra iniciar sesion.`
+      );
+
+      if (!confirmado) return;
+
+      try {
+        const resultado = await eliminarUsuario(usuario.id);
+        mostrarMensaje(
+          resultado?.bajaLogica
+            ? "El usuario tiene historial y quedo inactivo."
+            : "Usuario eliminado correctamente.",
+          "success"
+        );
+        if (usuarioEditandoId === usuario.id) {
+          limpiarFormulario();
+        }
+        await cargarDatos();
+      } catch (error) {
+        mostrarMensaje(error.message);
+      }
+    });
+    acciones.append(btnEliminar);
+
     tabla.appendChild(tr);
   });
 }
@@ -89,23 +208,30 @@ btnCrearUsuario.addEventListener("click", async () => {
 
   try {
     btnCrearUsuario.disabled = true;
-    await crearUsuario({
-      clienteId: Number(clienteId.value),
-      nombre: nombre.value,
-      email: email.value,
-      rol: rol.value,
-      password: password.value
-    });
-    nombre.value = "";
-    email.value = "";
-    password.value = "";
-    mostrarMensaje("Usuario creado correctamente.", "success");
+
+    if (usuarioEditandoId) {
+      await actualizarUsuario(usuarioEditandoId, datosUsuarioDesdeFormulario());
+      mostrarMensaje("Usuario actualizado correctamente.", "success");
+    } else {
+      await crearUsuario({
+        ...datosUsuarioDesdeFormulario(),
+        password: password.value
+      });
+      mostrarMensaje("Usuario creado correctamente.", "success");
+    }
+
+    limpiarFormulario();
     await cargarDatos();
   } catch (error) {
     mostrarMensaje(error.message);
   } finally {
     btnCrearUsuario.disabled = false;
   }
+});
+
+btnCancelarEdicion.addEventListener("click", () => {
+  limpiarMensaje();
+  limpiarFormulario();
 });
 
 async function iniciar() {

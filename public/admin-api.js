@@ -56,6 +56,19 @@ export function crearUsuario(datos) {
   });
 }
 
+export function actualizarUsuario(id, datos) {
+  return request(`/api/admin/usuarios/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(datos)
+  });
+}
+
+export function eliminarUsuario(id) {
+  return request(`/api/admin/usuarios/${id}`, {
+    method: "DELETE"
+  });
+}
+
 export function resetearPasswordUsuario(id, password) {
   return request(`/api/admin/usuarios/${id}/reset-password`, {
     method: "POST",

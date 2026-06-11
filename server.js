@@ -565,6 +565,7 @@ app.post("/api/admin/usuarios", asyncHandler(async (req, res) => {
   const nombre = String(req.body.nombre || "").trim();
   const rol = String(req.body.rol || "usuario_cliente").trim();
   const password = String(req.body.password || "");
+  const activo = req.body.activo !== false;
 
   if (!Number.isInteger(clienteId) || clienteId <= 0) {
     res.status(400).json({ message: "Selecciona un cliente válido." });
@@ -583,9 +584,9 @@ app.post("/api/admin/usuarios", asyncHandler(async (req, res) => {
 
   const { rows } = await pool.query(
     `INSERT INTO usuarios (cliente_id, email, nombre, rol, password_hash, activo)
-     VALUES ($1, $2, $3, $4, $5, true)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING id, cliente_id, email, nombre, rol, activo`,
-    [clienteId, email, nombre, rol, hashPassword(password)]
+    [clienteId, email, nombre, rol, hashPassword(password), activo]
   );
 
   const client = await pool.query("SELECT nombre FROM clientes WHERE id = $1", [clienteId]);
@@ -611,6 +612,11 @@ app.put("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
     return;
   }
 
+  if (Number(req.params.id) === Number(req.user.sub) && (!activo || rol !== "super_admin")) {
+    res.status(400).json({ message: "No puedes quitarte tu propio acceso de super admin." });
+    return;
+  }
+
   const { rows } = await pool.query(
     `UPDATE usuarios
      SET cliente_id = $1,
@@ -633,6 +639,44 @@ app.put("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
   rows[0].cliente_nombre = client.rows[0]?.nombre || "";
 
   res.json(mapUsuario(rows[0]));
+}));
+
+app.delete("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
+  if (Number(req.params.id) === Number(req.user.sub)) {
+    res.status(400).json({ message: "No puedes eliminar tu propio usuario." });
+    return;
+  }
+
+  const relatedMeasurements = await pool.query("SELECT id FROM mediciones WHERE usuario_id = $1 LIMIT 1", [
+    req.params.id
+  ]);
+
+  if (!relatedMeasurements.rows.length) {
+    const deleteResult = await pool.query("DELETE FROM usuarios WHERE id = $1", [req.params.id]);
+
+    if (!deleteResult.rowCount) {
+      res.status(404).json({ message: "Usuario no encontrado." });
+      return;
+    }
+
+    res.json({ eliminado: true, bajaLogica: false });
+    return;
+  }
+
+  const result = await pool.query(
+    `UPDATE usuarios
+     SET activo = false,
+         updated_at = now()
+     WHERE id = $1`,
+    [req.params.id]
+  );
+
+  if (!result.rowCount) {
+    res.status(404).json({ message: "Usuario no encontrado." });
+    return;
+  }
+
+  res.json({ eliminado: false, bajaLogica: true });
 }));
 
 app.post("/api/admin/usuarios/:id/reset-password", asyncHandler(async (req, res) => {
