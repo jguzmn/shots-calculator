@@ -32,6 +32,8 @@ SESSION_SECRET=cadena-larga-aleatoria
 DEMO_USER_EMAIL=demo@barraexacta.app
 DEMO_USER_PASSWORD=DemoBarraExacta2026!
 DEMO_USER_NAME=Usuario Demo
+DEMO_CLIENT_NAME=Cliente Demo
+DEMO_CLIENT_SLUG=demo
 ```
 
 La variable `DATABASE_URL` es secreta y no debe subirse al repositorio.
@@ -104,6 +106,7 @@ La tabla `catalogo_botellas_base` se reserva para ofrecer un catalogo inicial a 
 La tabla `usuarios` guarda usuarios basicos para demo:
 
 - `id`
+- `cliente_id`
 - `email`
 - `nombre`
 - `rol`
@@ -111,6 +114,41 @@ La tabla `usuarios` guarda usuarios basicos para demo:
 - `activo`
 - `created_at`
 - `updated_at`
+
+La tabla `clientes` prepara el producto para pilotos por cliente:
+
+- `id`
+- `nombre`
+- `slug`
+- `activo`
+- `tamano_trago_default`
+- `created_at`
+- `updated_at`
+
+La tabla `mediciones` guarda el historial operativo:
+
+- `cliente_id`
+- `botella_id`
+- `usuario_id`
+- `peso_actual`
+- `tamano_trago`
+- `peso_licor`
+- `tragos_decimales`
+- `tragos_fraccion`
+- `created_at`
+
+## Piloto profesional
+
+El alcance tecnico actual del piloto incluye:
+
+- Login privado.
+- Usuario demo asociado a un cliente demo.
+- Botellas filtradas por cliente.
+- Calculadora de tragos.
+- Registro automatico de mediciones al calcular.
+- Pantalla de historial.
+- Exportacion CSV de mediciones.
+- Catalogo base disponible para futuras importaciones por cliente.
 
 ## Despliegue temporal en Vercel
 
@@ -146,6 +184,12 @@ Notas:
 - `POST /api/botellas`
 - `PUT /api/botellas/:id`
 - `DELETE /api/botellas/:id`
+- `GET /api/mediciones`
+- `POST /api/mediciones`
+- `GET /api/mediciones.csv`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
 
 ## Nota de seguridad
 

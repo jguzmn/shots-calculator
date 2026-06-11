@@ -1,4 +1,4 @@
-import { listarBotellas } from "./api-client.js";
+import { listarBotellas, registrarMedicion } from "./api-client.js";
 import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
 import { calcularTragos as calcularTragosDisponibles } from "./calculator.js";
 
@@ -54,7 +54,7 @@ async function cargarBotellas() {
   }
 }
 
-function calcularTragos() {
+async function calcularTragos() {
   limpiarMensaje();
 
   const opcion = botella.selectedOptions[0];
@@ -93,6 +93,20 @@ function calcularTragos() {
   pesoLicor.textContent = resultado.pesoLicor.toFixed(2);
   tragosDecimales.textContent = resultado.totalTragos.toFixed(2);
   tragosFraccion.textContent = resultado.tragosFraccion;
+
+  try {
+    btnCalcular.disabled = true;
+    await registrarMedicion({
+      botellaId: Number(opcion.value),
+      pesoActual: pesoActualValor,
+      tamanoTrago: tamTragoValor
+    });
+    mostrarMensaje("Medición registrada correctamente.", "success");
+  } catch (error) {
+    mostrarMensaje(error.message);
+  } finally {
+    btnCalcular.disabled = false;
+  }
 }
 
 btnCalcular.addEventListener("click", calcularTragos);

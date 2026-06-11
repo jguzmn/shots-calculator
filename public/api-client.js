@@ -48,3 +48,14 @@ export function eliminarBotella(id) {
     method: "POST"
   });
 }
+
+export function registrarMedicion(datos) {
+  return request("/api/mediciones", {
+    method: "POST",
+    body: JSON.stringify(datos)
+  });
+}
+
+export function listarMediciones() {
+  return request("/api/mediciones");
+}

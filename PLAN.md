@@ -228,6 +228,27 @@ Avances aplicados:
 - Las rutas `/api/botellas` requieren sesion.
 - La interfaz agrega pantalla `login.html` y boton de cerrar sesion.
 
+### Piloto profesional
+
+Avances aplicados:
+
+- Se agrega tabla `clientes`.
+- El usuario demo queda asociado a un cliente demo.
+- Las botellas operativas quedan asociadas a `cliente_id`.
+- La API de botellas filtra datos por cliente de la sesion.
+- Se agrega tabla `mediciones` para historial operativo.
+- Cada calculo registra una medicion con botella, usuario, peso actual, tamano de trago y resultado.
+- Se agrega pantalla `historial.html` para consultar mediciones recientes.
+- Se agrega exportacion CSV de mediciones.
+
+Pendientes posteriores:
+
+- Panel para crear clientes desde la interfaz.
+- Copiar catalogo base a un cliente desde la interfaz.
+- Roles diferenciados entre admin de cliente y usuario operativo.
+- Filtros de historial por fecha y botella.
+- Configuracion visual por cliente.
+
 ## Pendientes por Definir
 
 ### Nombre comercial del producto

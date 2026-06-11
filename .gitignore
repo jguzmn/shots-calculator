@@ -8,3 +8,4 @@ dev-server.err.log
 dbBackup.gz
 dev-server.log
 dev-server.err.log
+.local/

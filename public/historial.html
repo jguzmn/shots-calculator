@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lista de Botellas</title>
+  <title>Historial de Mediciones | BarraExacta</title>
   <link rel="stylesheet" href="style.css" />
-  <script type="module" src="botellas.js"></script>
+  <script type="module" src="historial.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -17,8 +17,8 @@
 
       <nav class="topnav" aria-label="Navegación principal">
         <a class="nav-link" href="index.html">Calculadora</a>
-        <a class="nav-link active" href="botellas.html">Botellas</a>
-        <a class="nav-link" href="historial.html">Historial</a>
+        <a class="nav-link" href="botellas.html">Botellas</a>
+        <a class="nav-link active" href="historial.html">Historial</a>
       </nav>
 
       <button id="btnCerrarSesion" class="button button-secondary topbar-action" type="button">Cerrar sesión</button>
@@ -27,31 +27,30 @@
     <main class="workspace">
       <section class="page-header">
         <div>
-          <p class="eyebrow">Catálogo</p>
-          <h1>Botellas Registradas</h1>
+          <p class="eyebrow">Control</p>
+          <h1>Historial de Mediciones</h1>
         </div>
 
-        <div class="page-actions">
-          <button id="btnNueva" class="button button-primary" type="button">Nueva Botella</button>
-          <a href="index.html" class="button button-secondary">Volver a Calculadora</a>
-        </div>
+        <a href="/api/mediciones.csv" class="button button-secondary">Exportar CSV</a>
       </section>
 
       <div id="mensaje" class="message" role="status" hidden></div>
 
       <section class="panel">
         <div class="panel-header">
-          <h2>Catálogo de botellas</h2>
+          <h2>Últimas mediciones</h2>
         </div>
 
         <div class="table-wrap">
-          <table id="tablaBotellas">
+          <table id="tablaMediciones">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Peso vacío (g)</th>
-                <th>Densidad</th>
-                <th>Acciones</th>
+                <th>Fecha</th>
+                <th>Botella</th>
+                <th>Peso actual</th>
+                <th>Trago</th>
+                <th>Tragos</th>
+                <th>Usuario</th>
               </tr>
             </thead>
             <tbody></tbody>
