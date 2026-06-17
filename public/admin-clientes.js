@@ -1,5 +1,10 @@
 import { copiarCatalogoBase, crearCliente, listarClientes } from "./admin-api.js";
-import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
+import {
+  configurarCerrarSesion,
+  configurarNavegacionAdmin,
+  puedeAdministrarPlataforma,
+  requerirSesion
+} from "./auth-client.js";
 
 const mensaje = document.getElementById("mensaje");
 const adminWorkspace = document.getElementById("adminWorkspace");
@@ -102,15 +107,13 @@ async function iniciar() {
 
   if (!session) return;
 
-  if (session.user.rol !== "super_admin") {
+  if (!puedeAdministrarPlataforma(session)) {
     window.location.href = "index.html";
     return;
   }
 
   configurarCerrarSesion();
-  document.querySelectorAll(".admin-only").forEach((item) => {
-    item.hidden = false;
-  });
+  configurarNavegacionAdmin(session);
   adminWorkspace.hidden = false;
   await cargarClientes();
 }

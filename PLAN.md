@@ -82,13 +82,13 @@ Resultado esperado:
 
 Objetivo: preparar el proyecto para evolucionar de aplicacion estatica a portal.
 
-Opcion recomendada:
+Opcion recomendada para el estado actual:
 
-- Vite
-- React
-- TypeScript
-- API Node.js
-- Neon Postgres
+- Mantener HTML, CSS y JavaScript vanilla.
+- Ordenar progresivamente carpetas, modulos y responsabilidades.
+- Mantener API Node.js.
+- Mantener Neon Postgres.
+- Revaluar React/Vite despues de validar piloto profesional y detectar complejidad real de UI.
 
 Entregables:
 
@@ -240,14 +240,14 @@ Avances aplicados:
 - Cada calculo registra una medicion con botella, usuario, peso actual, tamano de trago y resultado.
 - Se agrega pantalla `historial.html` para consultar mediciones recientes.
 - Se agrega exportacion CSV de mediciones.
+- Se agregan filtros de historial por botella y rango de fechas.
+- La exportacion CSV respeta los filtros aplicados.
 
 Pendientes posteriores:
 
 - Panel mas completo para editar clientes desde la interfaz.
-- Panel mas completo para editar usuarios desde la interfaz.
-- Roles diferenciados con permisos reales entre admin de cliente y usuario operativo.
-- Filtros de historial por fecha y botella.
 - Configuracion visual por cliente.
+- Filtros adicionales de historial por usuario y resumen por periodo.
 
 ### Modo admin inicial
 
@@ -266,7 +266,22 @@ Avances aplicados:
 - El super admin puede activar, inactivar y eliminar usuarios.
 - La eliminacion de usuarios es fisica si no hay historial; si hay mediciones, se maneja como baja logica para conservar trazabilidad.
 - El super admin puede resetear contrasenas de usuarios.
-- La navegacion admin solo se muestra a usuarios `super_admin`.
+- El `admin_cliente` puede administrar usuarios de su propio cliente.
+- El `usuario_cliente` no ve ni usa modulos administrativos.
+- Se agrega rol `solo_lectura` como base para reportes.
+- La navegacion administrativa se muestra segun rol.
+
+### Estabilizacion segun estandar vanilla JS
+
+Avances aplicados:
+
+- Se agrega baja logica de botellas cuando tienen historial.
+- Si una botella no tiene historial, se permite eliminacion fisica.
+- Se reemplazan `confirm()` y `prompt()` restantes por un modal propio.
+- Se mejora el mensaje para errores por registros relacionados.
+- Se agrega documentacion inicial en `docs/`.
+- Se extraen reglas de roles del backend a `lib/roles.js`.
+- Se agrega helper frontend `public/ui.js` para modales de accion.
 
 ## Pendientes por Definir
 

@@ -17,10 +17,10 @@
 
       <nav class="topnav" aria-label="Navegación principal">
         <a class="nav-link" href="index.html">Calculadora</a>
-        <a class="nav-link" href="botellas.html">Botellas</a>
+        <a class="nav-link bottle-admin-only" href="botellas.html" hidden>Botellas</a>
         <a class="nav-link active" href="historial.html">Historial</a>
-        <a class="nav-link admin-only" href="admin-clientes.html" hidden>Clientes</a>
-        <a class="nav-link admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
+        <a class="nav-link platform-admin-only" href="admin-clientes.html" hidden>Clientes</a>
+        <a class="nav-link client-admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
       </nav>
 
       <button id="btnCerrarSesion" class="button button-secondary topbar-action" type="button">Cerrar sesión</button>
@@ -33,10 +33,36 @@
           <h1>Historial de Mediciones</h1>
         </div>
 
-        <a href="/api/mediciones.csv" class="button button-secondary">Exportar CSV</a>
+        <a id="btnExportarCsv" href="/api/mediciones.csv" class="button button-secondary">Exportar CSV</a>
       </section>
 
       <div id="mensaje" class="message" role="status" hidden></div>
+
+      <section class="panel admin-form-panel">
+        <div class="panel-header">
+          <h2>Filtros</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="filtroBotella">Botella</label>
+            <select id="filtroBotella"></select>
+          </div>
+          <div class="field">
+            <label for="fechaDesde">Fecha desde</label>
+            <input id="fechaDesde" type="date" />
+          </div>
+          <div class="field">
+            <label for="fechaHasta">Fecha hasta</label>
+            <input id="fechaHasta" type="date" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="btnLimpiarFiltros" type="button" class="button button-secondary">Limpiar</button>
+          <button id="btnAplicarFiltros" type="button" class="button button-primary">Aplicar filtros</button>
+        </div>
+      </section>
 
       <section class="panel">
         <div class="panel-header">

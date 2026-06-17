@@ -1,5 +1,10 @@
 import { actualizarBotella, crearBotella, obtenerBotella } from "./api-client.js";
-import { configurarCerrarSesion, configurarNavegacionAdmin, requerirSesion } from "./auth-client.js";
+import {
+  configurarCerrarSesion,
+  configurarNavegacionAdmin,
+  puedeAdministrarBotellas,
+  requerirSesion
+} from "./auth-client.js";
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
@@ -83,6 +88,11 @@ async function iniciar() {
 
   configurarCerrarSesion();
   configurarNavegacionAdmin(session);
+
+  if (!puedeAdministrarBotellas(session)) {
+    window.location.href = "index.html";
+    return;
+  }
 
   if (id) {
     titulo.textContent = "Editar Botella";

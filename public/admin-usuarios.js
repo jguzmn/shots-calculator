@@ -6,7 +6,13 @@ import {
   listarUsuarios,
   resetearPasswordUsuario
 } from "./admin-api.js";
-import { configurarCerrarSesion, requerirSesion } from "./auth-client.js";
+import {
+  configurarCerrarSesion,
+  configurarNavegacionAdmin,
+  puedeAdministrarUsuarios,
+  requerirSesion
+} from "./auth-client.js";
+import { crearModalAccion } from "./ui.js";
 
 const mensaje = document.getElementById("mensaje");
 const adminWorkspace = document.getElementById("adminWorkspace");
@@ -20,6 +26,22 @@ const password = document.getElementById("password");
 const activo = document.getElementById("activo");
 const btnCrearUsuario = document.getElementById("btnCrearUsuario");
 const btnCancelarEdicion = document.getElementById("btnCancelarEdicion");
+const modalConfirmacion = document.getElementById("modalConfirmacion");
+const modalTitulo = document.getElementById("modalTitulo");
+const modalMensaje = document.getElementById("modalMensaje");
+const modalPasswordField = document.getElementById("modalPasswordField");
+const modalPassword = document.getElementById("modalPassword");
+const btnModalCancelar = document.getElementById("btnModalCancelar");
+const btnModalConfirmar = document.getElementById("btnModalConfirmar");
+const abrirModalAccion = crearModalAccion({
+  modal: modalConfirmacion,
+  titulo: modalTitulo,
+  mensaje: modalMensaje,
+  passwordField: modalPasswordField,
+  passwordInput: modalPassword,
+  cancelar: btnModalCancelar,
+  confirmar: btnModalConfirmar
+});
 
 let usuarioEditandoId = null;
 
@@ -49,6 +71,19 @@ function agregarCelda(fila, texto) {
   td.textContent = texto;
   fila.appendChild(td);
   return td;
+}
+
+function configurarRolesPorSesion(session) {
+  if (session.user.rol === "super_admin") {
+    return;
+  }
+
+  const rolesPermitidos = ["admin_cliente", "usuario_cliente", "solo_lectura"];
+  Array.from(rol.options).forEach((option) => {
+    if (!rolesPermitidos.includes(option.value)) {
+      option.remove();
+    }
+  });
 }
 
 function limpiarFormulario() {
@@ -151,7 +186,12 @@ function renderUsuarios(usuarios) {
     btnReset.className = "button button-secondary";
     btnReset.textContent = "Reset password";
     btnReset.addEventListener("click", async () => {
-      const nuevoPassword = window.prompt(`Nueva contraseña para ${usuario.email}`);
+      const nuevoPassword = await abrirModalAccion({
+        titulo: "Resetear contraseña",
+        mensaje: `Ingresa una nueva contraseña para ${usuario.email}.`,
+        requierePassword: true,
+        confirmarTexto: "Actualizar"
+      });
 
       if (!nuevoPassword) return;
 
@@ -169,9 +209,11 @@ function renderUsuarios(usuarios) {
     btnEliminar.className = "btnEliminar";
     btnEliminar.textContent = "Eliminar";
     btnEliminar.addEventListener("click", async () => {
-      const confirmado = window.confirm(
-        `Eliminar usuario ${usuario.email}? Si tiene historial, quedara inactivo y no podra iniciar sesion.`
-      );
+      const confirmado = await abrirModalAccion({
+        titulo: "Eliminar usuario",
+        mensaje: `Eliminar usuario ${usuario.email}? Si tiene historial, quedara inactivo y no podra iniciar sesion.`,
+        confirmarTexto: "Eliminar"
+      });
 
       if (!confirmado) return;
 
@@ -239,15 +281,14 @@ async function iniciar() {
 
   if (!session) return;
 
-  if (session.user.rol !== "super_admin") {
+  if (!puedeAdministrarUsuarios(session)) {
     window.location.href = "index.html";
     return;
   }
 
   configurarCerrarSesion();
-  document.querySelectorAll(".admin-only").forEach((item) => {
-    item.hidden = false;
-  });
+  configurarRolesPorSesion(session);
+  configurarNavegacionAdmin(session);
   adminWorkspace.hidden = false;
   await cargarDatos();
 }

@@ -2,6 +2,7 @@ const path = require("node:path");
 const express = require("express");
 const { Pool } = require("pg");
 const { hashPassword, signSession, verifyPassword, verifySession } = require("./lib/auth-utils");
+const { isPlatformAdmin, validUserRoles } = require("./lib/roles");
 require("dotenv").config();
 
 const app = express();
@@ -117,6 +118,64 @@ function escapeCsv(value) {
   }
 
   return text;
+}
+
+function buildMedicionesFilter(req) {
+  const conditions = ["m.cliente_id = $1"];
+  const params = [req.user.clienteId];
+  const botellaId = Number(req.query.botellaId);
+  const fechaDesde = String(req.query.fechaDesde || "").trim();
+  const fechaHasta = String(req.query.fechaHasta || "").trim();
+  const isValidDateText = (value) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+    if (!match) {
+      return false;
+    }
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  };
+
+  if (req.query.botellaId && (!Number.isInteger(botellaId) || botellaId <= 0)) {
+    return { error: "Selecciona una botella valida." };
+  }
+
+  if (fechaDesde && !isValidDateText(fechaDesde)) {
+    return { error: "La fecha inicial no es valida." };
+  }
+
+  if (fechaHasta && !isValidDateText(fechaHasta)) {
+    return { error: "La fecha final no es valida." };
+  }
+
+  if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
+    return { error: "La fecha inicial no puede ser posterior a la fecha final." };
+  }
+
+  if (req.query.botellaId) {
+    params.push(botellaId);
+    conditions.push(`m.botella_id = $${params.length}`);
+  }
+
+  if (fechaDesde) {
+    params.push(fechaDesde);
+    conditions.push(`m.created_at >= $${params.length}::date`);
+  }
+
+  if (fechaHasta) {
+    params.push(fechaHasta);
+    conditions.push(`m.created_at < ($${params.length}::date + INTERVAL '1 day')`);
+  }
+
+  return {
+    params,
+    where: conditions.join(" AND ")
+  };
 }
 
 async function ensureSchema() {
@@ -450,9 +509,9 @@ app.post("/api/auth/logout", (req, res) => {
   res.status(204).send();
 });
 
-app.use("/api/admin", requireAuth, requireRole("super_admin"));
+app.use("/api/admin", requireAuth);
 
-app.get("/api/admin/clientes", asyncHandler(async (_req, res) => {
+app.get("/api/admin/clientes", requireRole("super_admin", "admin_cliente"), asyncHandler(async (req, res) => {
   const { rows } = await pool.query(
     `SELECT c.id,
             c.nombre,
@@ -464,14 +523,16 @@ app.get("/api/admin/clientes", asyncHandler(async (_req, res) => {
      FROM clientes c
      LEFT JOIN usuarios u ON u.cliente_id = c.id
      LEFT JOIN botellas b ON b.cliente_id = c.id
+     WHERE ($1::boolean = true OR c.id = $2)
      GROUP BY c.id
-     ORDER BY c.nombre ASC`
+     ORDER BY c.nombre ASC`,
+    [isPlatformAdmin(req.user), req.user.clienteId]
   );
 
   res.json(rows.map(mapCliente));
 }));
 
-app.post("/api/admin/clientes", asyncHandler(async (req, res) => {
+app.post("/api/admin/clientes", requireRole("super_admin"), asyncHandler(async (req, res) => {
   const nombre = String(req.body.nombre || "").trim();
   const slug = slugify(req.body.slug || nombre);
   const tamanoTragoDefault = Number(req.body.tamanoTragoDefault || 60);
@@ -506,7 +567,7 @@ app.post("/api/admin/clientes", asyncHandler(async (req, res) => {
   res.status(201).json(mapCliente(rows[0]));
 }));
 
-app.put("/api/admin/clientes/:id", asyncHandler(async (req, res) => {
+app.put("/api/admin/clientes/:id", requireRole("super_admin"), asyncHandler(async (req, res) => {
   const nombre = String(req.body.nombre || "").trim();
   const slug = slugify(req.body.slug || nombre);
   const activo = Boolean(req.body.activo);
@@ -537,12 +598,12 @@ app.put("/api/admin/clientes/:id", asyncHandler(async (req, res) => {
   res.json(mapCliente(rows[0]));
 }));
 
-app.post("/api/admin/clientes/:id/copiar-catalogo-base", asyncHandler(async (req, res) => {
+app.post("/api/admin/clientes/:id/copiar-catalogo-base", requireRole("super_admin"), asyncHandler(async (req, res) => {
   await copiarCatalogoBaseACliente(req.params.id);
   res.status(204).send();
 }));
 
-app.get("/api/admin/usuarios", asyncHandler(async (_req, res) => {
+app.get("/api/admin/usuarios", requireRole("super_admin", "admin_cliente"), asyncHandler(async (req, res) => {
   const { rows } = await pool.query(
     `SELECT u.id,
             u.cliente_id,
@@ -553,22 +614,30 @@ app.get("/api/admin/usuarios", asyncHandler(async (_req, res) => {
             u.activo
      FROM usuarios u
      JOIN clientes c ON c.id = u.cliente_id
-     ORDER BY c.nombre ASC, u.nombre ASC`
+     WHERE ($1::boolean = true OR u.cliente_id = $2)
+     ORDER BY c.nombre ASC, u.nombre ASC`,
+    [isPlatformAdmin(req.user), req.user.clienteId]
   );
 
   res.json(rows.map(mapUsuario));
 }));
 
-app.post("/api/admin/usuarios", asyncHandler(async (req, res) => {
-  const clienteId = Number(req.body.clienteId);
+app.post("/api/admin/usuarios", requireRole("super_admin", "admin_cliente"), asyncHandler(async (req, res) => {
+  const requestedClienteId = Number(req.body.clienteId);
+  const clienteId = isPlatformAdmin(req.user) ? requestedClienteId : Number(req.user.clienteId);
   const email = String(req.body.email || "").trim().toLowerCase();
   const nombre = String(req.body.nombre || "").trim();
   const rol = String(req.body.rol || "usuario_cliente").trim();
   const password = String(req.body.password || "");
   const activo = req.body.activo !== false;
 
-  if (!Number.isInteger(clienteId) || clienteId <= 0) {
+  if (!Number.isInteger(requestedClienteId) || requestedClienteId <= 0) {
     res.status(400).json({ message: "Selecciona un cliente válido." });
+    return;
+  }
+
+  if (!isPlatformAdmin(req.user) && requestedClienteId !== Number(req.user.clienteId)) {
+    res.status(403).json({ message: "No puedes crear usuarios para otro cliente." });
     return;
   }
 
@@ -577,8 +646,13 @@ app.post("/api/admin/usuarios", asyncHandler(async (req, res) => {
     return;
   }
 
-  if (!["super_admin", "admin_cliente", "usuario_cliente", "demo"].includes(rol)) {
+  if (!validUserRoles.includes(rol)) {
     res.status(400).json({ message: "Rol inválido." });
+    return;
+  }
+
+  if (!isPlatformAdmin(req.user) && !["admin_cliente", "usuario_cliente", "solo_lectura"].includes(rol)) {
+    res.status(403).json({ message: "No puedes asignar ese rol." });
     return;
   }
 
@@ -595,25 +669,51 @@ app.post("/api/admin/usuarios", asyncHandler(async (req, res) => {
   res.status(201).json(mapUsuario(rows[0]));
 }));
 
-app.put("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
-  const clienteId = Number(req.body.clienteId);
+app.put("/api/admin/usuarios/:id", requireRole("super_admin", "admin_cliente"), asyncHandler(async (req, res) => {
+  const requestedClienteId = Number(req.body.clienteId);
+  const clienteId = isPlatformAdmin(req.user) ? requestedClienteId : Number(req.user.clienteId);
   const email = String(req.body.email || "").trim().toLowerCase();
   const nombre = String(req.body.nombre || "").trim();
   const rol = String(req.body.rol || "usuario_cliente").trim();
   const activo = Boolean(req.body.activo);
 
-  if (!Number.isInteger(clienteId) || clienteId <= 0 || !email || !nombre) {
+  if (!Number.isInteger(requestedClienteId) || requestedClienteId <= 0 || !email || !nombre) {
     res.status(400).json({ message: "Cliente, correo y nombre son obligatorios." });
     return;
   }
 
-  if (!["super_admin", "admin_cliente", "usuario_cliente", "demo"].includes(rol)) {
+  if (!isPlatformAdmin(req.user) && requestedClienteId !== Number(req.user.clienteId)) {
+    res.status(403).json({ message: "No puedes mover usuarios a otro cliente." });
+    return;
+  }
+
+  if (!validUserRoles.includes(rol)) {
     res.status(400).json({ message: "Rol inválido." });
     return;
   }
 
-  if (Number(req.params.id) === Number(req.user.sub) && (!activo || rol !== "super_admin")) {
-    res.status(400).json({ message: "No puedes quitarte tu propio acceso de super admin." });
+  if (!isPlatformAdmin(req.user) && !["admin_cliente", "usuario_cliente", "solo_lectura"].includes(rol)) {
+    res.status(403).json({ message: "No puedes asignar ese rol." });
+    return;
+  }
+
+  if (Number(req.params.id) === Number(req.user.sub) && (!activo || rol !== req.user.rol)) {
+    res.status(400).json({ message: "No puedes quitarte tu propio acceso." });
+    return;
+  }
+
+  const target = await pool.query(
+    "SELECT id, rol FROM usuarios WHERE id = $1 AND ($2::boolean = true OR cliente_id = $3)",
+    [req.params.id, isPlatformAdmin(req.user), req.user.clienteId]
+  );
+
+  if (!target.rows.length) {
+    res.status(404).json({ message: "Usuario no encontrado." });
+    return;
+  }
+
+  if (!isPlatformAdmin(req.user) && target.rows[0].rol === "super_admin") {
+    res.status(403).json({ message: "No puedes actualizar ese usuario." });
     return;
   }
 
@@ -626,8 +726,9 @@ app.put("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
          activo = $5,
          updated_at = now()
      WHERE id = $6
+       AND ($7::boolean = true OR cliente_id = $8)
      RETURNING id, cliente_id, email, nombre, rol, activo`,
-    [clienteId, email, nombre, rol, activo, req.params.id]
+    [clienteId, email, nombre, rol, activo, req.params.id, isPlatformAdmin(req.user), req.user.clienteId]
   );
 
   if (!rows.length) {
@@ -641,9 +742,24 @@ app.put("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
   res.json(mapUsuario(rows[0]));
 }));
 
-app.delete("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
+app.delete("/api/admin/usuarios/:id", requireRole("super_admin", "admin_cliente"), asyncHandler(async (req, res) => {
   if (Number(req.params.id) === Number(req.user.sub)) {
     res.status(400).json({ message: "No puedes eliminar tu propio usuario." });
+    return;
+  }
+
+  const target = await pool.query(
+    "SELECT id, cliente_id, rol FROM usuarios WHERE id = $1 AND ($2::boolean = true OR cliente_id = $3)",
+    [req.params.id, isPlatformAdmin(req.user), req.user.clienteId]
+  );
+
+  if (!target.rows.length) {
+    res.status(404).json({ message: "Usuario no encontrado." });
+    return;
+  }
+
+  if (!isPlatformAdmin(req.user) && target.rows[0].rol === "super_admin") {
+    res.status(403).json({ message: "No puedes eliminar ese usuario." });
     return;
   }
 
@@ -679,11 +795,26 @@ app.delete("/api/admin/usuarios/:id", asyncHandler(async (req, res) => {
   res.json({ eliminado: false, bajaLogica: true });
 }));
 
-app.post("/api/admin/usuarios/:id/reset-password", asyncHandler(async (req, res) => {
+app.post("/api/admin/usuarios/:id/reset-password", requireRole("super_admin", "admin_cliente"), asyncHandler(async (req, res) => {
   const password = String(req.body.password || "");
 
   if (!password || password.length < 8) {
     res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
+    return;
+  }
+
+  const target = await pool.query(
+    "SELECT id, rol FROM usuarios WHERE id = $1 AND ($2::boolean = true OR cliente_id = $3)",
+    [req.params.id, isPlatformAdmin(req.user), req.user.clienteId]
+  );
+
+  if (!target.rows.length) {
+    res.status(404).json({ message: "Usuario no encontrado." });
+    return;
+  }
+
+  if (!isPlatformAdmin(req.user) && target.rows[0].rol === "super_admin") {
+    res.status(403).json({ message: "No puedes actualizar ese usuario." });
     return;
   }
 
@@ -728,7 +859,7 @@ app.get("/api/botellas/:id", asyncHandler(async (req, res) => {
   res.json(mapBotella(rows[0]));
 }));
 
-app.post("/api/botellas", asyncHandler(async (req, res) => {
+app.post("/api/botellas", requireRole("super_admin", "admin_cliente", "demo"), asyncHandler(async (req, res) => {
   const validation = validateBotella(req.body);
   if (validation.error) {
     res.status(400).json({ message: validation.error });
@@ -775,26 +906,69 @@ async function actualizarBotella(req, res) {
 }
 
 async function eliminarBotellaPorId(req, res) {
-  const result = await pool.query("DELETE FROM botellas WHERE id = $1 AND cliente_id = $2", [
+  const botella = await pool.query("SELECT id FROM botellas WHERE id = $1 AND cliente_id = $2", [
     req.params.id,
     req.user.clienteId
   ]);
 
-  if (!result.rowCount) {
+  if (!botella.rows.length) {
     res.status(404).json({ message: "Botella no encontrada." });
     return;
   }
 
-  res.status(204).send();
+  const relatedMeasurements = await pool.query(
+    "SELECT id FROM mediciones WHERE botella_id = $1 AND cliente_id = $2 LIMIT 1",
+    [req.params.id, req.user.clienteId]
+  );
+
+  if (!relatedMeasurements.rows.length) {
+    await pool.query("DELETE FROM botellas WHERE id = $1 AND cliente_id = $2", [
+      req.params.id,
+      req.user.clienteId
+    ]);
+    res.json({ eliminado: true, bajaLogica: false, message: "La botella fue eliminada correctamente." });
+    return;
+  }
+
+  await pool.query(
+    `UPDATE botellas
+     SET activo = false,
+         updated_at = now()
+     WHERE id = $1
+       AND cliente_id = $2`,
+    [req.params.id, req.user.clienteId]
+  );
+
+  res.json({
+    eliminado: false,
+    bajaLogica: true,
+    message: "La botella tiene historial y quedo inactiva."
+  });
 }
 
-app.put("/api/botellas/:id", asyncHandler(actualizarBotella));
-app.post("/api/botellas/:id/actualizar", asyncHandler(actualizarBotella));
-app.delete("/api/botellas/:id", asyncHandler(eliminarBotellaPorId));
-app.post("/api/botellas/:id/eliminar", asyncHandler(eliminarBotellaPorId));
+app.put("/api/botellas/:id", requireRole("super_admin", "admin_cliente", "demo"), asyncHandler(actualizarBotella));
+app.post(
+  "/api/botellas/:id/actualizar",
+  requireRole("super_admin", "admin_cliente", "demo"),
+  asyncHandler(actualizarBotella)
+);
+app.delete("/api/botellas/:id", requireRole("super_admin", "admin_cliente", "demo"), asyncHandler(eliminarBotellaPorId));
+app.post(
+  "/api/botellas/:id/eliminar",
+  requireRole("super_admin", "admin_cliente", "demo"),
+  asyncHandler(eliminarBotellaPorId)
+);
 
 app.get("/api/mediciones", asyncHandler(async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 50, 200);
+  const filter = buildMedicionesFilter(req);
+
+  if (filter.error) {
+    res.status(400).json({ message: filter.error });
+    return;
+  }
+
+  filter.params.push(limit);
   const { rows } = await pool.query(
     `SELECT m.id,
             m.botella_id,
@@ -809,10 +983,10 @@ app.get("/api/mediciones", asyncHandler(async (req, res) => {
      FROM mediciones m
      JOIN botellas b ON b.id = m.botella_id
      JOIN usuarios u ON u.id = m.usuario_id
-     WHERE m.cliente_id = $1
+     WHERE ${filter.where}
      ORDER BY m.created_at DESC
-     LIMIT $2`,
-    [req.user.clienteId, limit]
+     LIMIT $${filter.params.length}`,
+    filter.params
   );
 
   res.json(rows.map(mapMedicion));
@@ -904,6 +1078,13 @@ app.post("/api/mediciones", asyncHandler(async (req, res) => {
 }));
 
 app.get("/api/mediciones.csv", requireAuth, asyncHandler(async (req, res) => {
+  const filter = buildMedicionesFilter(req);
+
+  if (filter.error) {
+    res.status(400).json({ message: filter.error });
+    return;
+  }
+
   const { rows } = await pool.query(
     `SELECT m.created_at,
             b.nombre AS botella_nombre,
@@ -916,9 +1097,9 @@ app.get("/api/mediciones.csv", requireAuth, asyncHandler(async (req, res) => {
      FROM mediciones m
      JOIN botellas b ON b.id = m.botella_id
      JOIN usuarios u ON u.id = m.usuario_id
-     WHERE m.cliente_id = $1
+     WHERE ${filter.where}
      ORDER BY m.created_at DESC`,
-    [req.user.clienteId]
+    filter.params
   );
 
   const header = [
@@ -983,7 +1164,9 @@ app.use((error, _req, res, _next) => {
   }
 
   if (foreignKeyViolation) {
-    res.status(400).json({ message: "El registro relacionado no existe." });
+    res.status(400).json({
+      message: "No fue posible completar la accion porque existen registros relacionados."
+    });
     return;
   }
 

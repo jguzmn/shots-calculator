@@ -54,6 +54,18 @@ export function cerrarSesion() {
   });
 }
 
+export function puedeAdministrarBotellas(session) {
+  return ["super_admin", "admin_cliente", "demo"].includes(session?.user?.rol);
+}
+
+export function puedeAdministrarUsuarios(session) {
+  return ["super_admin", "admin_cliente"].includes(session?.user?.rol);
+}
+
+export function puedeAdministrarPlataforma(session) {
+  return session?.user?.rol === "super_admin";
+}
+
 export function configurarCerrarSesion() {
   const button = document.getElementById("btnCerrarSesion");
 
@@ -69,11 +81,23 @@ export function configurarCerrarSesion() {
 }
 
 export function configurarNavegacionAdmin(session) {
-  if (session?.user?.rol !== "super_admin") {
-    return;
+  const rol = session?.user?.rol;
+
+  if (["super_admin", "admin_cliente", "demo"].includes(rol)) {
+    document.querySelectorAll(".bottle-admin-only").forEach((item) => {
+      item.hidden = false;
+    });
   }
 
-  document.querySelectorAll(".admin-only").forEach((item) => {
-    item.hidden = false;
-  });
+  if (["super_admin", "admin_cliente"].includes(rol)) {
+    document.querySelectorAll(".client-admin-only").forEach((item) => {
+      item.hidden = false;
+    });
+  }
+
+  if (rol === "super_admin") {
+    document.querySelectorAll(".platform-admin-only").forEach((item) => {
+      item.hidden = false;
+    });
+  }
 }

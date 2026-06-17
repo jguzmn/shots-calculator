@@ -16,10 +16,10 @@
 
       <nav class="topnav" aria-label="Navegación principal">
         <a class="nav-link active" href="index.html">Calculadora</a>
-        <a class="nav-link" href="botellas.html">Botellas</a>
+        <a class="nav-link bottle-admin-only" href="botellas.html" hidden>Botellas</a>
         <a class="nav-link" href="historial.html">Historial</a>
-        <a class="nav-link admin-only" href="admin-clientes.html" hidden>Clientes</a>
-        <a class="nav-link admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
+        <a class="nav-link platform-admin-only" href="admin-clientes.html" hidden>Clientes</a>
+        <a class="nav-link client-admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
       </nav>
 
       <button id="btnCerrarSesion" class="button button-secondary topbar-action" type="button">Cerrar sesión</button>
@@ -31,7 +31,7 @@
           <p class="eyebrow">Operación</p>
           <h1>Calculadora de Tragos</h1>
         </div>
-        <a href="botellas.html" class="button button-secondary">Administrar botellas</a>
+        <a href="botellas.html" class="button button-secondary bottle-admin-only" hidden>Administrar botellas</a>
       </section>
 
       <div id="mensaje" class="message" role="status" hidden></div>

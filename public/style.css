@@ -482,6 +482,40 @@ tbody tr:hover {
   margin: 0;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.52);
+}
+
+.modal-panel {
+  width: min(100%, 460px);
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.modal-panel h2 {
+  margin: 0 0 10px;
+  color: var(--heading);
+  font-size: 20px;
+}
+
+.modal-panel p {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  padding: 0;
+}
+
 @media (max-width: 760px) {
   .topbar,
   .page-header {

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check scripts/seed-botellas.js && node --check scripts/import-catalogo-base.js && node --check scripts/seed-demo-user.js && node --check scripts/seed-admin-user.js",
+    "check": "node --check server.js && node --check lib/auth-utils.js && node --check lib/roles.js && node --check scripts/seed-botellas.js && node --check scripts/import-catalogo-base.js && node --check scripts/seed-demo-user.js && node --check scripts/seed-admin-user.js",
     "seed": "node scripts/seed-botellas.js",
     "seed:demo-user": "node scripts/seed-demo-user.js",
     "seed:admin-user": "node scripts/seed-admin-user.js",

@@ -17,10 +17,10 @@
 
       <nav class="topnav" aria-label="Navegación principal">
         <a class="nav-link" href="index.html">Calculadora</a>
-        <a class="nav-link" href="botellas.html">Botellas</a>
+        <a class="nav-link bottle-admin-only" href="botellas.html" hidden>Botellas</a>
         <a class="nav-link" href="historial.html">Historial</a>
-        <a class="nav-link admin-only" href="admin-clientes.html" hidden>Clientes</a>
-        <a class="nav-link active admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
+        <a class="nav-link platform-admin-only" href="admin-clientes.html" hidden>Clientes</a>
+        <a class="nav-link active client-admin-only" href="admin-usuarios.html" hidden>Usuarios</a>
       </nav>
 
       <button id="btnCerrarSesion" class="button button-secondary topbar-action" type="button">Cerrar sesión</button>
@@ -59,6 +59,7 @@
             <select id="rol">
               <option value="admin_cliente">Admin cliente</option>
               <option value="usuario_cliente">Usuario cliente</option>
+              <option value="solo_lectura">Solo lectura</option>
               <option value="demo">Demo</option>
               <option value="super_admin">Super admin</option>
             </select>
@@ -103,6 +104,21 @@
         </div>
       </section>
     </main>
+
+    <div id="modalConfirmacion" class="modal-backdrop" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+        <h2 id="modalTitulo">Confirmar accion</h2>
+        <p id="modalMensaje"></p>
+        <div id="modalPasswordField" class="field" hidden>
+          <label for="modalPassword">Nueva contraseña</label>
+          <input id="modalPassword" type="password" />
+        </div>
+        <div class="form-actions modal-actions">
+          <button id="btnModalCancelar" type="button" class="button button-secondary">Cancelar</button>
+          <button id="btnModalConfirmar" type="button" class="button button-primary">Confirmar</button>
+        </div>
+      </section>
+    </div>
   </div>
 </body>
 </html>

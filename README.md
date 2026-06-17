@@ -130,10 +130,11 @@ La tabla `usuarios` guarda usuarios basicos para demo:
 
 Roles iniciales:
 
-- `super_admin`: administra clientes y usuarios.
-- `admin_cliente`: reservado para administracion futura por cliente.
-- `usuario_cliente`: usuario operativo.
-- `demo`: usuario de demostracion.
+- `super_admin`: administra plataforma, clientes y usuarios.
+- `admin_cliente`: administra usuarios y catalogo de su cliente.
+- `usuario_cliente`: usa calculadora e historial.
+- `solo_lectura`: reservado para consulta de reportes.
+- `demo`: usuario de demostracion con permisos controlados para catalogo.
 
 La tabla `clientes` prepara el producto para pilotos por cliente:
 
@@ -169,8 +170,11 @@ El alcance tecnico actual del piloto incluye:
 - Calculadora de tragos.
 - Registro automatico de mediciones al calcular.
 - Pantalla de historial.
+- Filtros de historial por botella y rango de fechas.
 - Exportacion CSV de mediciones.
 - Catalogo base disponible para futuras importaciones por cliente.
+- Baja logica de botellas y usuarios con historial.
+- Documentacion inicial en `docs/`.
 
 ## Despliegue temporal en Vercel
 
@@ -222,7 +226,15 @@ Notas:
 - `DELETE /api/admin/usuarios/:id`
 - `POST /api/admin/usuarios/:id/reset-password`
 
-La eliminacion de usuarios es fisica cuando no tienen mediciones asociadas. Si ya tienen historial, el endpoint los deja inactivos para conservar trazabilidad.
+`GET /api/mediciones` y `GET /api/mediciones.csv` aceptan filtros `botellaId`, `fechaDesde` y `fechaHasta`.
+
+La eliminacion de usuarios y botellas es fisica cuando no tienen mediciones asociadas. Si ya tienen historial, el endpoint los deja inactivos para conservar trazabilidad.
+
+## Documentacion adicional
+
+- `docs/modelo-datos.md`
+- `docs/despliegue.md`
+- `docs/decisiones-tecnicas.md`
 
 ## Nota de seguridad
 

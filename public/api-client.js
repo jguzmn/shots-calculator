@@ -56,6 +56,15 @@ export function registrarMedicion(datos) {
   });
 }
 
-export function listarMediciones() {
-  return request("/api/mediciones");
+export function listarMediciones(filtros = {}) {
+  const params = new URLSearchParams();
+
+  Object.entries(filtros).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, value);
+    }
+  });
+
+  const query = params.toString();
+  return request(`/api/mediciones${query ? `?${query}` : ""}`);
 }

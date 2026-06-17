@@ -1,5 +1,10 @@
 import { eliminarBotella, listarBotellas } from "./api-client.js";
-import { configurarCerrarSesion, configurarNavegacionAdmin, requerirSesion } from "./auth-client.js";
+import {
+  configurarCerrarSesion,
+  configurarNavegacionAdmin,
+  puedeAdministrarBotellas,
+  requerirSesion
+} from "./auth-client.js";
 
 const tabla = document.querySelector("#tablaBotellas tbody");
 const btnNueva = document.getElementById("btnNueva");
@@ -81,8 +86,8 @@ function renderAcciones(contenedor, botella) {
 
     btnConfirmar.addEventListener("click", async () => {
       try {
-        await eliminarBotella(botella.id);
-        mostrarMensaje("Botella eliminada correctamente.", "success");
+        const resultado = await eliminarBotella(botella.id);
+        mostrarMensaje(resultado?.message || "Botella retirada correctamente.", "success");
         await cargarBotellas();
       } catch (error) {
         mostrarMensaje(error.message);
@@ -106,7 +111,7 @@ function renderAcciones(contenedor, botella) {
   const btnEliminar = document.createElement("button");
   btnEliminar.className = "btnEliminar";
   btnEliminar.type = "button";
-  btnEliminar.textContent = "Eliminar";
+  btnEliminar.textContent = "Retirar";
 
   btnEditar.addEventListener("click", () => {
     window.location.href = `botella-form.html?id=${botella.id}`;
@@ -114,7 +119,7 @@ function renderAcciones(contenedor, botella) {
 
   btnEliminar.addEventListener("click", () => {
     botellaPendienteEliminar = botella.id;
-    mostrarMensaje(`Confirma la eliminación de "${botella.nombre}".`, "info");
+    mostrarMensaje(`Confirma el retiro de "${botella.nombre}". Si tiene historial quedara inactiva.`, "info");
     renderBotellas(botellasActuales);
   });
 
@@ -130,6 +135,12 @@ async function iniciar() {
 
   configurarCerrarSesion();
   configurarNavegacionAdmin(session);
+
+  if (!puedeAdministrarBotellas(session)) {
+    window.location.href = "index.html";
+    return;
+  }
+
   await cargarBotellas();
 }
 
